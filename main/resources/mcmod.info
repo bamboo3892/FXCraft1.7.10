@@ -1,0 +1,13 @@
+[
+{
+  "name": "FXCraft",
+  "description": "This is a mod",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["Taketorino_Okina"],
+  "credits": "",
+  "logoFile": "logo.png",
+  "screenshots": []
+}
+]
