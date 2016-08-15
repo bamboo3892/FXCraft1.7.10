@@ -15,7 +15,7 @@ public class AccountUpdateHandler {
 
 	/**Make sure to register valid object*/
 	public void registerUpdateObject(IAccountInfoContainer container) {
-		if(containerList.contains(container)){
+		if(!containerList.contains(container)){
 			containerList.add(Objects.requireNonNull(container));
 		}
 	}

@@ -1,6 +1,7 @@
 package com.okina.fxcraft.client.gui.fxdealer;
 
 import java.util.List;
+import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
@@ -8,6 +9,7 @@ import com.google.common.collect.Lists;
 import com.okina.fxcraft.account.AccountInfo;
 import com.okina.fxcraft.client.gui.GuiFlatButton;
 import com.okina.fxcraft.client.gui.GuiTab;
+import com.okina.fxcraft.main.FXCraft;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -54,7 +56,7 @@ public class LogInTab extends GuiTab<FXDealerGui> {
 		int right = (gui.width + gui.getSizeX()) / 2;
 		int up = (gui.height - gui.getSizeY()) / 2;
 		int down = (gui.height + gui.getSizeY()) / 2;
-		AccountInfo login = gui.tile.getLogInAccount();
+		AccountInfo login = gui.tile.getAccountInfo();
 		fontRenderer.drawString("LogIn : " + (login == null ? "No Account" : login.name), left + 4, up + 27, 0xffffff, false);
 		fontRenderer.drawString("Account Name", left + 126, up + 27, 0xffffff, false);
 		fontRenderer.drawString("Password", left + 126, up + 43, 0xffffff, false);
@@ -70,8 +72,8 @@ public class LogInTab extends GuiTab<FXDealerGui> {
 		fontRenderer.drawString("Total Loss", left + 6, up + 116, 0xffd700, false);
 		fontRenderer.drawString("Account Balance", left + 6, up + 133, 0x00ffff, false);
 		fontRenderer.drawString("Positions Total Value", left + 6, up + 150, 0x00ffff, false);
-		fontRenderer.drawString("Your Total Assets", left + 6, up + 167, 0x00ffff, false);
-		//		fontRenderer.drawString("Balance", left + 6, up + 184, 0x00ffff, false);
+		fontRenderer.drawString("Orders Total Value", left + 6, up + 167, 0x00ffff, false);
+		fontRenderer.drawString("Your Total Assets", left + 6, up + 184, 0x00ffff, false);
 		fontRenderer.drawString("Account Total Achievement", left + 6, up + 201, 0x7fff00, false);
 		fontRenderer.drawString("Account Rating", left + 6, up + 218, 0x7fff00, false);
 		if(login != null){
@@ -88,17 +90,18 @@ public class LogInTab extends GuiTab<FXDealerGui> {
 			str = String.valueOf(login.totalLoss);
 			fontRenderer.drawString(str, left + 351 - fontRenderer.getStringWidth(str), up + 116, 0xffd700, false);
 
-			str = String.valueOf(login.balance);
+			str = String.format("%.3f", login.balance);
 			fontRenderer.drawString(str, left + 351 - fontRenderer.getStringWidth(str), up + 133, 0x00ffff, false);
 
-			str = String.valueOf(0);
+			Map<String, Double> rateMap = FXCraft.rateGetter.getEarliestRate();
+			str = String.format("%.3f", login.getPosiitionsValue(rateMap));
 			fontRenderer.drawString(str, left + 351 - fontRenderer.getStringWidth(str), up + 150, 0x00ffff, false);
 
-			str = String.valueOf(0);
+			str = String.format("%.3f", login.getOrdersValue(rateMap));
 			fontRenderer.drawString(str, left + 351 - fontRenderer.getStringWidth(str), up + 167, 0x00ffff, false);
 
-			//			str = String.valueOf(0);
-			//			fontRenderer.drawString(str, left + 351 - fontRenderer.getStringWidth(str), up + 184, 0x00ffff, false);
+			str = String.format("%.3f", login.getTotalBalence(rateMap));
+			fontRenderer.drawString(str, left + 351 - fontRenderer.getStringWidth(str), up + 184, 0x00ffff, false);
 
 			str = "10.2";
 			fontRenderer.drawString(str, left + 351 - fontRenderer.getStringWidth(str), up + 201, 0x7fff00, false);
@@ -127,6 +130,8 @@ public class LogInTab extends GuiTab<FXDealerGui> {
 		int id = guiButton.id;
 		if(id == 1){
 			gui.tile.tryLogIn(nameField.getText() == null ? "" : nameField.getText(), passwordField.getText() == null ? "" : passwordField.getText());
+			nameField.setText("");
+			passwordField.setText("");
 		}else if(id == 2){
 			gui.tile.logOut();
 		}

@@ -1,6 +1,7 @@
 package com.okina.fxcraft.account;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 
@@ -15,7 +16,7 @@ public class AccountInfo {
 	public static final int[] POSITION_LIMIT = { 2, 3, 5, 7, 10, 12 };
 
 	public String name;
-	public int balance;
+	public double balance;
 	public int totalDeal;
 	public int totalLimitsDeal;
 	public long totalGain;
@@ -44,9 +45,43 @@ public class AccountInfo {
 		dealLotLimit = 0;
 	}
 
+	public double getTotalBalence(Map<String, Double> rateMap) {
+		double value = balance;
+		value += getPosiitionsValue(rateMap);
+		value += getOrdersValue(rateMap);
+		return value;
+	}
+
+	public double getPosiitionsValue(Map<String, Double> rateMap) {
+		double value = 0;
+		for (FXPosition position : positionList){
+			if(rateMap.containsKey(position.currencyPair)){
+				value += position.getValue(rateMap.get(position.currencyPair));
+			}else{
+				value += position.depositLot;
+			}
+		}
+		return value;
+	}
+
+	public double getOrdersValue(Map<String, Double> rateMap) {
+		double value = 0;
+		for (GetPositionOrder order : getPositionOrder){
+			value += order.depositLot;
+		}
+		for (SettlePositionOrder order : settlePositionOrder){
+			if(rateMap.containsKey(order.position.currencyPair)){
+				value += order.position.getValue(rateMap.get(order.position.currencyPair));
+			}else{
+				value += order.position.depositLot;
+			}
+		}
+		return value;
+	}
+
 	public void writeToNBT(NBTTagCompound tag) {
 		tag.setString("name", name);
-		tag.setInteger("balance", balance);
+		tag.setDouble("balance", balance);
 		tag.setInteger("totalDeal", totalDeal);
 		tag.setInteger("totalLimitsDeal", totalLimitsDeal);
 		tag.setLong("totalGain", totalGain);
@@ -90,7 +125,7 @@ public class AccountInfo {
 
 	public void readFromNBT(NBTTagCompound tag) {
 		name = tag.getString("name");
-		balance = tag.getInteger("balance");
+		balance = tag.getDouble("balance");
 		totalDeal = tag.getInteger("totalDeal");
 		totalLimitsDeal = tag.getInteger("totalLimitsDeal");
 		totalGain = tag.getLong("totalGain");
@@ -141,6 +176,7 @@ public class AccountInfo {
 		}
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		return o instanceof AccountInfo && name.equals(((AccountInfo) o).name);
 	}

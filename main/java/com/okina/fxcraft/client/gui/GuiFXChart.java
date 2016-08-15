@@ -115,20 +115,17 @@ public class GuiFXChart extends GuiButton {
 				double valueMargin = maxRate - minRate;
 				Calendar latest = dataList.get(dataList.size() - 1).calendar;
 				Calendar earliest = dataList.get(0).calendar;
-				long termMargin = earliest.getTimeInMillis() - latest.getTimeInMillis();
-				long earliestMills = earliest.getTimeInMillis();
+				//				long earliestMills = earliest.getTimeInMillis();
+				//				long termMargin = earliestMills - latest.getTimeInMillis();
+				int dataSize = dataList.size();
 				List<VertexCoord> coordList = Lists.newArrayList();
-				for (int index = 0; index < dataList.size(); index++){
+				for (int index = 0; index < dataSize; index++){
 					RateData data = dataList.get(index);
-					long margin = earliestMills - data.calendar.getTimeInMillis();
-					double x = xPosition + effWidth - ((double) margin / termMargin) * effWidth;
+					//					long margin = earliestMills - data.calendar.getTimeInMillis();
+					//					double x = xPosition + effWidth - ((double) margin / termMargin) * effWidth;
+					double x = xPosition + effWidth - ((double) index / dataSize) * effWidth;
 					double y = yPosition + (maxRate - data.open) / valueMargin * effHeight;
 					coordList.add(new VertexCoord(x, y, data));
-					//				if(index != 0){
-					//					drawLine(tessellator, lastX, lastY, x, y);
-					//				}
-					//				lastX = x;
-					//				lastY = y;
 				}
 				drawLines(coordList, 0xFF7FFF00);
 

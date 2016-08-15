@@ -14,6 +14,7 @@ import com.okina.fxcraft.client.gui.GuiSlider;
 import com.okina.fxcraft.client.gui.GuiTab;
 import com.okina.fxcraft.main.FXCraft;
 import com.okina.fxcraft.rate.FXRateGetHelper;
+import com.okina.fxcraft.rate.NoValidRateException;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -65,7 +66,7 @@ public class ChartTab extends GuiTab<FXDealerGui> {
 		list.add(termButtons[5] = new GuiFlatSelectButton(FXRateGetHelper.TERM_1M + 100, left + 4, down - 18, 32, 14, "MON", new float[] { 0.5f, 1f, 0f }));
 		termButtons[0].selected = true;
 
-		list.add(positionTable = new GuiPositionTable(10, left + 226, up + 37, new GuiPositionTableRow(8, new int[] { 28, 20, 39, 39 }, new String[] { "PAIR", "B/A", "RATE", "POINT" }), 12));
+		list.add(positionTable = new GuiPositionTable(gui.tile, 10, left + 226, up + 37, new GuiPositionTableRow(8, new int[] { 28, 20, 39, 39 }, new String[] { "PAIR", "B/A", "RATE", "POINT" }, new int[] { FXPosition.FIELD_PAIR, FXPosition.FIELD_ASK_BID, FXPosition.FIELD_RATE, FXPosition.FIELD_LOT }), 12));
 
 		list.add(getPositionButtons[0] = dealLotSlider = new GuiSlider(3, left + 272, down - 62, 80, 1000, 100000, 1000, 1000));
 		list.add(getPositionButtons[1] = depositLotSlider = new GuiSlider(3, left + 272, down - 48, 80, 1000, 100000, 1000, 1000));
@@ -84,7 +85,7 @@ public class ChartTab extends GuiTab<FXDealerGui> {
 
 		list.add(bidButton = new GuiFlatConfirmButton(5, left + 226, down - 18, 62, 14, "BID", new float[] { 0.5f, 1f, 0f }, Lists.newArrayList("Press this button", "when you think rate decreasing."), Lists.newArrayList("Click Again To Confirm")));
 		list.add(askButton = new GuiFlatConfirmButton(6, left + 290, down - 18, 62, 14, "ASK", new float[] { 0.5f, 1f, 0f }, Lists.newArrayList("Press this button", "when you think rate increasing."), Lists.newArrayList("Click Again To Confirm")));
-		settleButton = new GuiFlatConfirmButton(1, left + 226, down - 18, 126, 14, "SETTLE", new float[] { 0.5f, 1f, 0f }, Lists.newArrayList("Settle Your Position"), Lists.newArrayList("Click Again To Confirm"));
+		settleButton = new GuiFlatConfirmButton(7, left + 226, down - 18, 126, 14, "SETTLE", new float[] { 0.5f, 1f, 0f }, Lists.newArrayList("Settle Your Position"), Lists.newArrayList("Click Again To Confirm"));
 
 		list.add(guiChart = new GuiFXChart(left + 4, up + 44, 212, 174));
 
@@ -99,11 +100,42 @@ public class ChartTab extends GuiTab<FXDealerGui> {
 		int id = guiButton.id;
 		if(id == 5){//bid
 			if(!bidButton.selected){
-				gui.tile.tryGetPosition(guiChart.getDisplayPair(), dealLotSlider.getValue(), depositLotSlider.getValue(), false);
+				if(limitsTradeButton.selected){
+					try{
+						double limits = Double.valueOf(limitsTradeField.getText());
+						gui.tile.tryGetPositionOrder(guiChart.getDisplayPair(), dealLotSlider.getValue(), depositLotSlider.getValue(), false, limits);
+					}catch (NumberFormatException e){
+						FXCraft.proxy.appendPopUp("Illegal Limits");
+					}
+				}else{
+					gui.tile.tryGetPosition(guiChart.getDisplayPair(), dealLotSlider.getValue(), depositLotSlider.getValue(), false);
+				}
 			}
 		}else if(id == 6){//ask
-			if(!bidButton.selected){
-				gui.tile.tryGetPosition(guiChart.getDisplayPair(), dealLotSlider.getValue(), depositLotSlider.getValue(), true);
+			if(!askButton.selected){
+				if(limitsTradeButton.selected){
+					try{
+						double limits = Double.valueOf(limitsTradeField.getText());
+						gui.tile.tryGetPositionOrder(guiChart.getDisplayPair(), dealLotSlider.getValue(), depositLotSlider.getValue(), true, limits);
+					}catch (NumberFormatException e){
+						FXCraft.proxy.appendPopUp("Illegal Limits");
+					}
+				}else{
+					gui.tile.tryGetPosition(guiChart.getDisplayPair(), dealLotSlider.getValue(), depositLotSlider.getValue(), true);
+				}
+			}
+		}else if(id == 7){//settle
+			if(!settleButton.selected){
+				if(limitsTradeButton.selected){
+					try{
+						double limits = Double.valueOf(limitsTradeField.getText());
+						gui.tile.trySettlePositionOrder(positionTable.getSelectedPosition(), settleLotSlider.getValue(), limits);
+					}catch (NumberFormatException e){
+						FXCraft.proxy.appendPopUp("Illegal Limits");
+					}
+				}else{
+					gui.tile.trySettlePosition(positionTable.getSelectedPosition(), settleLotSlider.getValue());
+				}
 			}
 		}else if(id == 50){//usdjpy
 			guiChart.setDisplayPair("USDJPY");
@@ -193,7 +225,11 @@ public class ChartTab extends GuiTab<FXDealerGui> {
 			fontRenderer.drawString(str, left + 351 - fontRenderer.getStringWidth(str), down - 93, 0xFFFFFF, false);
 
 			fontRenderer.drawString("Rate", left + 228, down - 83, 0xFFFFFF, false);
-			str = String.valueOf(FXCraft.rateGetter.getEarliestRate(str));
+			try{
+				str = String.valueOf(FXCraft.rateGetter.getEarliestRate(str));
+			}catch (NoValidRateException e){
+				str = "---";
+			}
 			fontRenderer.drawString(str, left + 351 - fontRenderer.getStringWidth(str), down - 83, 0xFFFFFF, false);
 
 			fontRenderer.drawString("Leverage", left + 228, down - 73, 0xFFFFFF, false);
@@ -205,26 +241,32 @@ public class ChartTab extends GuiTab<FXDealerGui> {
 		}else{
 			fontRenderer.drawString("Settle Your Position", left + 226, down - 104, 0x7fff00, false);
 			FXPosition position = positionTable.getSelectedPosition();
-			//			if(position != FXPosition.NO_INFO_POSITION){
-			String str;
-			fontRenderer.drawString("Date", left + 228, down - 93, 0xFFFFFF, false);
-			str = FXRateGetHelper.getCalendarString(position.contractDate, FXRateGetHelper.TERM_1w);
-			fontRenderer.drawString(str, left + 351 - fontRenderer.getStringWidth(str), down - 93, 0xFFFFFF, false);
+			if(position != FXPosition.NO_INFO){
+				String str;
+				fontRenderer.drawString("Date", left + 228, down - 93, 0xFFFFFF, false);
+				str = FXRateGetHelper.getCalendarString(position.contractDate, FXRateGetHelper.TERM_1w);
+				fontRenderer.drawString(str, left + 351 - fontRenderer.getStringWidth(str), down - 93, 0xFFFFFF, false);
 
-			fontRenderer.drawString("Leverage", left + 228, down - 83, 0xFFFFFF, false);
-			str = String.valueOf(position.getLeverage());
-			fontRenderer.drawString(str, left + 351 - fontRenderer.getStringWidth(str), down - 83, 0xFFFFFF, false);
+				fontRenderer.drawString("Leverage", left + 228, down - 83, 0xFFFFFF, false);
+				str = String.valueOf(position.getLeverage());
+				fontRenderer.drawString(str, left + 351 - fontRenderer.getStringWidth(str), down - 83, 0xFFFFFF, false);
 
-			fontRenderer.drawString("Now Rate", left + 228, down - 73, 0xFFFFFF, false);
-			double now = FXCraft.rateGetter.getEarliestRate(position.currencyPair);
-			str = String.valueOf(now);
-			fontRenderer.drawString(str, left + 351 - fontRenderer.getStringWidth(str), down - 73, 0xFFFFFF, false);
+				fontRenderer.drawString("Now Rate", left + 228, down - 73, 0xFFFFFF, false);
+				double now;
+				try{
+					now = FXCraft.rateGetter.getEarliestRate(position.currencyPair);
+				}catch (NoValidRateException e){
+					now = 0;
+				}
+				str = String.valueOf(now);
+				fontRenderer.drawString(str, left + 351 - fontRenderer.getStringWidth(str), down - 73, 0xFFFFFF, false);
 
-			fontRenderer.drawString("Gain", left + 228, down - 63, 0xFFFFFF, false);
-			double gain = position.getGain(now);
-			str = String.valueOf(gain);
-			fontRenderer.drawString(str, left + 351 - fontRenderer.getStringWidth(str), down - 63, gain < 0 ? 0xff4500 : 0x00ffff, false);
-			//			}
+				fontRenderer.drawString("Pos Value", left + 228, down - 63, 0xFFFFFF, false);
+				double gain = position.getGain(now);
+				double value = position.getValue(now);
+				str = String.format("%.3f", value);
+				fontRenderer.drawString(str, left + 351 - fontRenderer.getStringWidth(str), down - 63, gain < 0 ? 0xff4500 : 0x00ffff, false);
+			}
 
 			fontRenderer.drawString("Settle", left + 228, down - 45, 0xFFFFFF, false);
 		}

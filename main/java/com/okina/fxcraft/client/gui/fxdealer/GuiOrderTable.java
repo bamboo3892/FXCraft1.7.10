@@ -1,27 +1,32 @@
 package com.okina.fxcraft.client.gui.fxdealer;
 
 import com.okina.fxcraft.account.AccountInfo;
-import com.okina.fxcraft.account.FXPosition;
+import com.okina.fxcraft.account.GetPositionOrder;
 import com.okina.fxcraft.account.IAccountInfoContainer;
+import com.okina.fxcraft.account.SettlePositionOrder;
 import com.okina.fxcraft.client.gui.GuiTable;
 
 import net.minecraft.client.Minecraft;
 
-public class GuiPositionTable extends GuiTable<GuiPositionTableRow> {
+public class GuiOrderTable extends GuiTable<GuiOrderTableRow> {
 
 	private IAccountInfoContainer accountContainer;
 	private long lastAccountUpdate;
 
-	public GuiPositionTable(IAccountInfoContainer accountContainer, int buttonID, int startX, int startY, GuiPositionTableRow titleRow, int row) {
+	public GuiOrderTable(IAccountInfoContainer accountContainer, int buttonID, int startX, int startY, GuiOrderTableRow titleRow, int row) {
 		super(buttonID, startX, startY, titleRow, row);
 		this.accountContainer = accountContainer;
 		AccountInfo info = accountContainer.getAccountInfo();
 		if(info != null){
 			rowList.clear();
 			rowList.add(titleRow);
-			for (FXPosition position : info.positionList){
-				rowList.add(new GuiPositionTableRow(titleRow, position));
+			for (GetPositionOrder order : info.getPositionOrder){
+				rowList.add(new GuiOrderTableRow(titleRow, order));
 			}
+			for (SettlePositionOrder order : info.settlePositionOrder){
+				rowList.add(new GuiOrderTableRow(titleRow, order));
+			}
+			rowList.sort(GuiOrderTableRow.COMPARATOR);
 			lastAccountUpdate = System.currentTimeMillis();
 		}
 	}
@@ -34,18 +39,18 @@ public class GuiPositionTable extends GuiTable<GuiPositionTableRow> {
 				if(info != null){
 					rowList.clear();
 					rowList.add(titleRow);
-					for (FXPosition position : info.positionList){
-						rowList.add(new GuiPositionTableRow(titleRow, position));
+					for (GetPositionOrder order : info.getPositionOrder){
+						rowList.add(new GuiOrderTableRow(titleRow, order));
 					}
+					for (SettlePositionOrder order : info.settlePositionOrder){
+						rowList.add(new GuiOrderTableRow(titleRow, order));
+					}
+					rowList.sort(GuiOrderTableRow.COMPARATOR);
 					lastAccountUpdate = System.currentTimeMillis();
 				}
 			}
 			super.drawButton(minecraft, mouseX, mouseY);
 		}
-	}
-
-	public FXPosition getSelectedPosition() {
-		return getSelectedRow().position;
 	}
 
 }

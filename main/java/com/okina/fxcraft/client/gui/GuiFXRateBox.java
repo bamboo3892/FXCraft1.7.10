@@ -5,6 +5,7 @@ import java.awt.Color;
 import org.lwjgl.opengl.GL11;
 
 import com.okina.fxcraft.main.FXCraft;
+import com.okina.fxcraft.rate.NoValidRateException;
 import com.okina.fxcraft.rate.RateData;
 
 import net.minecraft.client.Minecraft;
@@ -77,7 +78,12 @@ public class GuiFXRateBox extends GuiButton {
 
 			fontrenderer.drawString("Rate", xPosition + 2, yPosition + 17, 0xFFFFFF, false);
 			if(FXCraft.rateGetter.hasUpdate(updateMills)){
-				double nowRate = FXCraft.rateGetter.getEarliestRate(displayString);
+				double nowRate;
+				try{
+					nowRate = FXCraft.rateGetter.getEarliestRate(displayString);
+				}catch (NoValidRateException e){
+					nowRate = 0;
+				}
 				if(nowRate == lastRenderedRate){
 					lastRenderedColor = 0xFFFFFF;
 				}else if(nowRate < lastRenderedRate){

@@ -2,10 +2,12 @@ package com.okina.fxcraft.rate;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**Server only*/
 public class FXRateUpdateThreadServer extends TimerTask implements IFXRateGetter {
@@ -20,6 +22,7 @@ public class FXRateUpdateThreadServer extends TimerTask implements IFXRateGetter
 
 	public FXRateUpdateThreadServer() {}
 
+	@Override
 	public void init() {
 		updateTimer.schedule(this, updateInterval, updateInterval);
 		new Thread(new Runnable() {
@@ -32,19 +35,54 @@ public class FXRateUpdateThreadServer extends TimerTask implements IFXRateGetter
 		}, "FX History Get Thread Server").start();
 	}
 
+	@Override
 	public boolean hasUpdate(long lastUpdate) {
 		return lastUpdate < lastUpdateMills;
 	}
 
-	public double getEarliestRate(String pair) {
+	@Override
+	public double getEarliestRate(String pair) throws NoValidRateException {
+		RateData data = null;
 		if("USDJPY".equals(pair)){
-			if(!rateUSDJPY.isEmpty()) return rateUSDJPY.get(0).open;
+			if(!rateUSDJPY.isEmpty()){
+				data = rateUSDJPY.get(0);
+			}
 		}else if("EURJPY".equals(pair)){
-			if(!rateEURJPY.isEmpty()) return rateEURJPY.get(0).open;
+			if(!rateEURJPY.isEmpty()){
+				data = rateEURJPY.get(0);
+			}
 		}else if("EURUSD".equals(pair)){
-			if(!rateEURUSD.isEmpty()) return rateEURUSD.get(0).open;
+			if(!rateEURUSD.isEmpty()){
+				data = rateEURUSD.get(0);
+			}
+		}else{
+			throw new IllegalArgumentException("Available rate pair: USDJPY, EURJPY, EURUSD");
 		}
-		return 0;
+		if(FXRateGetHelper.isValidRateData(data)){
+			return data.open;
+		}
+		throw new NoValidRateException();
+	}
+
+	@Override
+	public Map<String, Double> getEarliestRate() {
+		Map<String, Double> map = Maps.newHashMap();
+		try{
+			map.put("USDJPY", getEarliestRate("USDJPY"));
+		}catch (NoValidRateException e){
+
+		}
+		try{
+			map.put("EURJPY", getEarliestRate("EURJPY"));
+		}catch (NoValidRateException e){
+
+		}
+		try{
+			map.put("EURUSD", getEarliestRate("EURUSD"));
+		}catch (NoValidRateException e){
+
+		}
+		return map;
 	}
 
 	private void updateRate(int term) {

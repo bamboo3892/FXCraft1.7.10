@@ -36,8 +36,6 @@ public class FXRateGetHelper {
 	public static final Comparator<RateData> DATA_COMPARATOR = new Comparator<RateData>() {
 		@Override
 		public int compare(RateData o1, RateData o2) {
-			boolean after = o1.calendar.after(o2);
-			boolean before = o1.calendar.before(o2);
 			return -o1.calendar.compareTo(o2.calendar);
 		}
 	};
@@ -204,6 +202,12 @@ public class FXRateGetHelper {
 		default:
 			return calendar.get(Calendar.YEAR) + "/" + (calendar.get(Calendar.MONTH) + 1) + "/" + calendar.get(Calendar.DAY_OF_MONTH) + " " + calendar.get(Calendar.HOUR_OF_DAY) + ":" + UtilMethods.zeroFill(calendar.get(Calendar.MINUTE), 2);
 		}
+	}
+
+	public static boolean isValidRateData(RateData rate) {
+		//TODO
+		//		return rate == null ? false : Calendar.getInstance().getTimeInMillis() - rate.calendar.getTimeInMillis() <= 10000;
+		return rate != null;
 	}
 
 	private class RawRateDatas {

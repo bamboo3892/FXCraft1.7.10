@@ -5,6 +5,9 @@ import java.util.Calendar;
 public class RateData {
 
 	public static final RateData NO_DATA = new RateData(Calendar.getInstance(), 0, 0, 0);
+	static{
+		NO_DATA.calendar.setTimeInMillis(0);
+	}
 
 	public Calendar calendar;
 	public double high;

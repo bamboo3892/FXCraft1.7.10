@@ -132,10 +132,9 @@ public class CommonProxy {
 	//		}
 	//	}
 
-	protected List<SimpleTilePacket> serverPacketList = Lists.newArrayList();
+	protected List<SimpleTilePacket> serverPacketList = Collections.<SimpleTilePacket> synchronizedList(Lists.<SimpleTilePacket> newArrayList());
 
 	public void sendPacketToClient(SimpleTilePacket packet) {
-		System.out.println("aaaaaaaaaaaaaa");
 		if(FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER){
 			packetDispatcher.sendToAll(packet);
 		}else{

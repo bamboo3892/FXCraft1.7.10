@@ -14,7 +14,7 @@ public class Account extends AccountInfo {
 		this.password = password;
 	}
 
-	public Result tryGetPosition(Calendar date, String pair, int lot, int deposit, double rate, boolean askOrBid) {
+	public synchronized Result tryGetPosition(Calendar date, String pair, int lot, int deposit, double rate, boolean askOrBid) {
 		if(deposit <= 0 || lot < deposit){
 			return Result.FAIL_ILLEGAL_PARAM;
 		}
@@ -38,7 +38,7 @@ public class Account extends AccountInfo {
 		return Result.SUCCESS;
 	}
 
-	public Result tryGetPositionOrder(Calendar date, String pair, int lot, int deposit, boolean askOrBid, double limits) {
+	public synchronized Result tryGetPositionOrder(Calendar date, String pair, int lot, int deposit, boolean askOrBid, double limits) {
 		if(deposit <= 0 || lot < deposit){
 			return Result.FAIL_ILLEGAL_PARAM;
 		}
@@ -62,7 +62,7 @@ public class Account extends AccountInfo {
 		return Result.SUCCESS;
 	}
 
-	public Result trySettlePosition(FXPosition position, int dealLot, double rate) {
+	public synchronized Result trySettlePosition(FXPosition position, int dealLot, double rate) {
 		if(!positionList.contains(position) || position.lot < dealLot){
 			return Result.FAIL_ILLEGAL_PARAM;
 		}
@@ -75,7 +75,7 @@ public class Account extends AccountInfo {
 		return Result.SUCCESS;
 	}
 
-	public Result trySettlePositionOrder(FXPosition position, int dealLot, double limits) {
+	public synchronized Result trySettlePositionOrder(FXPosition position, int dealLot, double limits) {
 		if(!positionList.contains(position) || position.lot < dealLot){
 			return Result.FAIL_ILLEGAL_PARAM;
 		}

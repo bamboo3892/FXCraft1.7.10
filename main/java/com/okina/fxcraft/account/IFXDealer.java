@@ -18,7 +18,9 @@ public interface IFXDealer extends IAccountInfoContainer {
 
 		NO_PERMISSION_LEVERAGE(),
 
-		NO_PERMISSION_POSITION();
+		NO_PERMISSION_POSITION(),
+
+		FAIL_NO_VALID_RATE();
 
 	}
 

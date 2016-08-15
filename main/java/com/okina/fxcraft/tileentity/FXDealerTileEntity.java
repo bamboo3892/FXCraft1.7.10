@@ -23,6 +23,7 @@ import net.minecraft.tileentity.TileEntity;
 
 public class FXDealerTileEntity extends TileEntity implements IGuiTile, ISimpleTilePacketUser, IFXDealer {
 
+	private long lastAccountUpdate = 100;
 	private AccountInfo loginAccount;
 
 	//client only
@@ -37,12 +38,17 @@ public class FXDealerTileEntity extends TileEntity implements IGuiTile, ISimpleT
 		FXCraft.proxy.sendPacketToServer(new SimpleTilePacket(this, PacketType.ACCOUNT_LOGIN, tag));
 	}
 
-	public AccountInfo getLogInAccount() {
+	public boolean hasAccountUpdate(long lastAccountUpdate) {
+		return this.lastAccountUpdate > lastAccountUpdate;
+	}
+
+	public AccountInfo getAccountInfo() {
 		return loginAccount;
 	}
 
 	public void logOut() {
 		loginAccount = null;
+		lastAccountUpdate = System.currentTimeMillis();
 		FXCraft.proxy.sendPacketToServer(new SimpleTilePacket(this, PacketType.ACCOUNT_LOGOUT, 0));
 	}
 
@@ -61,13 +67,14 @@ public class FXDealerTileEntity extends TileEntity implements IGuiTile, ISimpleT
 		}
 	}
 
-	public void tryGetPosition(String pair, int dealLot, int deposit, double limits) {
+	public void tryGetPositionOrder(String pair, int dealLot, int deposit, boolean askOrBid, double limits) {
 		if(loginAccount != null){
 			NBTTagCompound tag = new NBTTagCompound();
 			tag.setString("account", loginAccount.name);
 			tag.setString("pair", pair);
 			tag.setInteger("deal", dealLot);
 			tag.setInteger("deposit", deposit);
+			tag.setBoolean("askOrBid", askOrBid);
 			tag.setDouble("limits", limits);
 			FXCraft.proxy.sendPacketToServer(new SimpleTilePacket(this, PacketType.FX_ORDER_GET_POSITION, tag));
 		}else{
@@ -76,27 +83,31 @@ public class FXDealerTileEntity extends TileEntity implements IGuiTile, ISimpleT
 	}
 
 	public void trySettlePosition(FXPosition position, int dealLot) {
-		if(loginAccount != null){
-			NBTTagCompound tag = new NBTTagCompound();
-			tag.setString("account", loginAccount.name);
-			tag.setString("id", position.positionID);
-			tag.setInteger("deal", dealLot);
-			FXCraft.proxy.sendPacketToServer(new SimpleTilePacket(this, PacketType.FX_SETTLE_POSITION, tag));
-		}else{
-			FXCraft.proxy.appendPopUp("Please Login");
+		if(position != FXPosition.NO_INFO){
+			if(loginAccount != null){
+				NBTTagCompound tag = new NBTTagCompound();
+				tag.setString("account", loginAccount.name);
+				tag.setString("id", position.positionID);
+				tag.setInteger("deal", dealLot);
+				FXCraft.proxy.sendPacketToServer(new SimpleTilePacket(this, PacketType.FX_SETTLE_POSITION, tag));
+			}else{
+				FXCraft.proxy.appendPopUp("Please Login");
+			}
 		}
 	}
 
-	public void trySettlePosition(FXPosition position, int dealLot, double limits) {
-		if(loginAccount != null){
-			NBTTagCompound tag = new NBTTagCompound();
-			tag.setString("account", loginAccount.name);
-			tag.setString("id", position.positionID);
-			tag.setInteger("deal", dealLot);
-			tag.setDouble("limits", limits);
-			FXCraft.proxy.sendPacketToServer(new SimpleTilePacket(this, PacketType.FX_ORDER_SETTLE_POSITION, tag));
-		}else{
-			FXCraft.proxy.appendPopUp("Please Login");
+	public void trySettlePositionOrder(FXPosition position, int dealLot, double limits) {
+		if(position != FXPosition.NO_INFO){
+			if(loginAccount != null){
+				NBTTagCompound tag = new NBTTagCompound();
+				tag.setString("account", loginAccount.name);
+				tag.setString("id", position.positionID);
+				tag.setInteger("deal", dealLot);
+				tag.setDouble("limits", limits);
+				FXCraft.proxy.sendPacketToServer(new SimpleTilePacket(this, PacketType.FX_ORDER_SETTLE_POSITION, tag));
+			}else{
+				FXCraft.proxy.appendPopUp("Please Login");
+			}
 		}
 	}
 
@@ -122,6 +133,7 @@ public class FXDealerTileEntity extends TileEntity implements IGuiTile, ISimpleT
 	public void updateAccountInfo(AccountInfo account) {
 		if(account.equals(loginAccount)){
 			loginAccount = account;
+			lastAccountUpdate = System.currentTimeMillis();
 			NBTTagCompound tag = new NBTTagCompound();
 			account.writeToNBT(tag);
 			FXCraft.proxy.sendPacketToClient(new SimpleTilePacket(this, PacketType.ACCOUNT_UPDATE, tag));
@@ -171,6 +183,7 @@ public class FXDealerTileEntity extends TileEntity implements IGuiTile, ISimpleT
 					tag.setBoolean("result", true);
 					tag.removeTag("password");
 					loginAccount = info;
+					lastAccountUpdate = System.currentTimeMillis();
 					FXCraft.proxy.sendPacketToClient(new SimpleTilePacket(this, PacketType.ACCOUNT_LOGIN, tag));
 				}else{
 					tag.setBoolean("result", false);
@@ -180,6 +193,7 @@ public class FXDealerTileEntity extends TileEntity implements IGuiTile, ISimpleT
 			}else if(type == PacketType.ACCOUNT_LOGOUT && value instanceof Integer){
 				FXCraft.proxy.sendPacketToClient(new SimpleTilePacket(this, PacketType.ACCOUNT_LOGOUT, 0));
 				loginAccount = null;
+				lastAccountUpdate = System.currentTimeMillis();
 			}else if(type == PacketType.FX_GET_POSITION && value instanceof NBTTagCompound){
 				NBTTagCompound tag = (NBTTagCompound) value;
 				String accountName = tag.getString("account");
@@ -194,10 +208,38 @@ public class FXDealerTileEntity extends TileEntity implements IGuiTile, ISimpleT
 				}
 			}else if(type == PacketType.FX_ORDER_GET_POSITION && value instanceof NBTTagCompound){
 				NBTTagCompound tag = (NBTTagCompound) value;
+				String accountName = tag.getString("account");
+				if(loginAccount != null && !"".equals(accountName) && accountName.equals(loginAccount.name)){
+					String pair = tag.getString("pair");
+					int dealLot = tag.getInteger("deal");
+					int deposit = tag.getInteger("deposit");
+					boolean askOrBid = tag.getBoolean("askOrBid");
+					double limits = tag.getDouble("limits");
+					AccountHandler.instance.tryGetPositionOrder(this, accountName, pair, dealLot, deposit, askOrBid, limits);
+				}else{
+					FXCraft.proxy.sendPacketToClient(new SimpleTilePacket(this, PacketType.MESSAGE, "Illegal Account Name"));
+				}
 			}else if(type == PacketType.FX_SETTLE_POSITION && value instanceof NBTTagCompound){
 				NBTTagCompound tag = (NBTTagCompound) value;
+				String accountName = tag.getString("account");
+				if(loginAccount != null && !"".equals(accountName) && accountName.equals(loginAccount.name)){
+					String id = tag.getString("id");
+					int dealLot = tag.getInteger("deal");
+					AccountHandler.instance.trySettlePosition(this, accountName, id, dealLot);
+				}else{
+					FXCraft.proxy.sendPacketToClient(new SimpleTilePacket(this, PacketType.MESSAGE, "Illegal Account Name"));
+				}
 			}else if(type == PacketType.FX_ORDER_SETTLE_POSITION && value instanceof NBTTagCompound){
 				NBTTagCompound tag = (NBTTagCompound) value;
+				String accountName = tag.getString("account");
+				if(loginAccount != null && !"".equals(accountName) && accountName.equals(loginAccount.name)){
+					String id = tag.getString("id");
+					int dealLot = tag.getInteger("deal");
+					double limits = tag.getDouble("limits");
+					AccountHandler.instance.trySettlePositionOrder(this, accountName, id, dealLot, limits);
+				}else{
+					FXCraft.proxy.sendPacketToClient(new SimpleTilePacket(this, PacketType.MESSAGE, "Illegal Account Name"));
+				}
 			}
 		}else{//client
 			if(type == PacketType.ACCOUNT_LOGIN && value instanceof NBTTagCompound){
@@ -208,6 +250,7 @@ public class FXDealerTileEntity extends TileEntity implements IGuiTile, ISimpleT
 					AccountInfo info = new AccountInfo(name);
 					info.readFromNBT(tag.getCompoundTag("info"));
 					loginAccount = info;
+					lastAccountUpdate = System.currentTimeMillis();
 					FXCraft.proxy.appendPopUp("LogIn: " + name);
 				}else{
 					FXCraft.proxy.appendPopUp("LogIn failed : " + name);
@@ -216,18 +259,24 @@ public class FXDealerTileEntity extends TileEntity implements IGuiTile, ISimpleT
 				if(loginAccount != null){
 					FXCraft.proxy.appendPopUp("LogOut : " + loginAccount.name);
 					loginAccount = null;
+					lastAccountUpdate = System.currentTimeMillis();
 				}
 			}else if(type == PacketType.ACCOUNT_UPDATE && value instanceof NBTTagCompound){
 				NBTTagCompound tag = (NBTTagCompound) value;
-				String name = tag.getString("name");
-				AccountInfo info = new AccountInfo(name);
-				info.readFromNBT(tag.getCompoundTag("info"));
-				loginAccount = info;
+				if(tag.hasKey("name")){
+					String name = tag.getString("name");
+					AccountInfo info = new AccountInfo(name);
+					info.readFromNBT(tag);
+					loginAccount = info;
+				}else{
+					loginAccount = null;
+				}
+				lastAccountUpdate = System.currentTimeMillis();
 			}else if(type == PacketType.MESSAGE && value instanceof String){
 				FXCraft.proxy.appendPopUp((String) value);
 			}
-			System.out.println(FMLCommonHandler.instance().getEffectiveSide() + " " + type + " " + value);
 		}
+		System.out.println(FMLCommonHandler.instance().getEffectiveSide() + " " + type + " " + value);
 	}
 
 	@Override

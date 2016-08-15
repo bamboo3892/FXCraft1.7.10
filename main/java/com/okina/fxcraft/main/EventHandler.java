@@ -2,15 +2,12 @@ package com.okina.fxcraft.main;
 
 import static com.okina.fxcraft.main.FXCraft.*;
 
-import java.awt.Color;
-
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
 import com.okina.fxcraft.client.IHUDUser;
 import com.okina.fxcraft.client.IToolTipUser;
 import com.okina.fxcraft.main.CommonProxy.PopUpMessage;
-import com.okina.fxcraft.network.SimpleTilePacket;
 import com.okina.fxcraft.utils.UtilMethods;
 
 import cpw.mods.fml.common.eventhandler.EventPriority;
@@ -85,8 +82,8 @@ public class EventHandler {
 
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onServerTick(TickEvent.ServerTickEvent event) {
-		for (SimpleTilePacket packet : proxy.serverPacketList){
-			packetDispatcher.sendToAll(packet);
+		for (int i = 0; i < proxy.serverPacketList.size(); i++){
+			packetDispatcher.sendToAll(proxy.serverPacketList.get(i));
 		}
 		proxy.serverPacketList.clear();
 	}
@@ -165,7 +162,6 @@ public class EventHandler {
 					if(alpha > 1f){
 						alpha = 1f;
 					}
-					int color = new Color(0, 0, 0, alpha).getRGB();
 					GL11.glDisable(GL11.GL_TEXTURE_2D);
 					Tessellator tessellator = Tessellator.instance;
 					GL11.glColor4f(0.0F, 0.0F, 0.0F, 0.5F);
@@ -177,7 +173,7 @@ public class EventHandler {
 					tessellator.draw();
 					GL11.glEnable(GL11.GL_TEXTURE_2D);
 					FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
-					fontRenderer.drawString(msg.message, 30 + offsetX, 73 + msg.index * 10, color, false);
+					fontRenderer.drawString(msg.message, 30 + offsetX, 73 + msg.index * 10, 0x7cfc00, false);
 				}
 			}
 			GL11.glPopAttrib();
