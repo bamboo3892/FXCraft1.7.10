@@ -22,10 +22,12 @@ public class FXDealerGui extends GuiTabbedPane {
 	private final static ResourceLocation TEXTURE = new ResourceLocation(FXCraft.MODID + ":textures/gui/container/fxdealer.png");
 
 	private List<GuiTab> tabList = Lists.newArrayList();
+	protected EntityPlayer player;
 	protected FXDealerTileEntity tile;
 
 	public FXDealerGui(EntityPlayer player, FXDealerTileEntity tile) {
 		super(new DummyContainer());
+		this.player = player;
 		this.tile = tile;
 		xSize = 356;
 		ySize = 240;

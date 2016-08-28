@@ -1,5 +1,7 @@
 package com.okina.fxcraft.network;
 
+import com.okina.fxcraft.main.FXCraft;
+
 import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
@@ -50,19 +52,9 @@ public class CommandPacket implements IMessage {
 		@Override
 		public IMessage onMessage(CommandPacket msg, MessageContext ctx) {
 			try{
-				//				if("particleSpawnRate".equals(msg.command)){
-				//					int value = Integer.parseInt(msg.value);
-				//					if(value >= 0 && value <= 100){
-				//						FXCraft.effectProperties.particleSpawnRate = value;
-				//						FXCraft.proxy.updatePropertyFile();
-				//						Minecraft.getMinecraft().thePlayer.addChatComponentMessage(new ChatComponentText("Set particleSpawnRate " + value));
-				//					}
-				//				}else if("renderPartsFancy".equals(msg.command)){
-				//					boolean value = Boolean.parseBoolean(msg.value);
-				//					FXCraft.effectProperties.renderPartsFancy = value;
-				//					FXCraft.proxy.updatePropertyFile();
-				//					Minecraft.getMinecraft().thePlayer.addChatComponentMessage(new ChatComponentText("Set renderPartsFancy " + value));
-				//				}
+				if("message".equals(msg.command)){
+					FXCraft.proxy.appendPopUp(msg.value);
+				}
 			}catch (Exception e){
 			}
 			return null;

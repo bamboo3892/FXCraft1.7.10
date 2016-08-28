@@ -19,7 +19,6 @@ public class GuiOrderTable extends GuiTable<GuiOrderTableRow> {
 		AccountInfo info = accountContainer.getAccountInfo();
 		if(info != null){
 			rowList.clear();
-			rowList.add(titleRow);
 			for (GetPositionOrder order : info.getPositionOrder){
 				rowList.add(new GuiOrderTableRow(titleRow, order));
 			}
@@ -27,6 +26,7 @@ public class GuiOrderTable extends GuiTable<GuiOrderTableRow> {
 				rowList.add(new GuiOrderTableRow(titleRow, order));
 			}
 			rowList.sort(GuiOrderTableRow.COMPARATOR);
+			rowList.add(0, titleRow);
 			lastAccountUpdate = System.currentTimeMillis();
 		}
 	}
@@ -38,7 +38,6 @@ public class GuiOrderTable extends GuiTable<GuiOrderTableRow> {
 				AccountInfo info = accountContainer.getAccountInfo();
 				if(info != null){
 					rowList.clear();
-					rowList.add(titleRow);
 					for (GetPositionOrder order : info.getPositionOrder){
 						rowList.add(new GuiOrderTableRow(titleRow, order));
 					}
@@ -46,6 +45,7 @@ public class GuiOrderTable extends GuiTable<GuiOrderTableRow> {
 						rowList.add(new GuiOrderTableRow(titleRow, order));
 					}
 					rowList.sort(GuiOrderTableRow.COMPARATOR);
+					rowList.add(0, titleRow);
 					lastAccountUpdate = System.currentTimeMillis();
 				}
 			}

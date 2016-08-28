@@ -164,15 +164,16 @@ public class EventHandler {
 					}
 					GL11.glDisable(GL11.GL_TEXTURE_2D);
 					Tessellator tessellator = Tessellator.instance;
+					FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
+					int size = fontRenderer.getStringWidth(msg.message);
 					GL11.glColor4f(0.0F, 0.0F, 0.0F, 0.5F);
 					tessellator.startDrawingQuads();
 					tessellator.addVertex(29 + offsetX, 72 + msg.index * 10, 0);
-					tessellator.addVertex(129 + offsetX, 72 + msg.index * 10, 0);
-					tessellator.addVertex(129 + offsetX, 72 + (msg.index + 1) * 10, 0);
+					tessellator.addVertex(31 + size + offsetX, 72 + msg.index * 10, 0);
+					tessellator.addVertex(31 + size + offsetX, 72 + (msg.index + 1) * 10, 0);
 					tessellator.addVertex(29 + offsetX, 72 + (msg.index + 1) * 10, 0);
 					tessellator.draw();
 					GL11.glEnable(GL11.GL_TEXTURE_2D);
-					FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
 					fontRenderer.drawString(msg.message, 30 + offsetX, 73 + msg.index * 10, 0x7cfc00, false);
 				}
 			}

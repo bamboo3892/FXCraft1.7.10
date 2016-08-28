@@ -15,7 +15,7 @@ import net.minecraft.client.gui.GuiTextField;
 
 public class MakeAccountTab extends GuiTab<AccountManagerGui> {
 
-	private List<GuiButton> list;
+	private List<GuiButton> list = Lists.newArrayList();
 	private GuiIconLabel checkLabel;
 	private GuiTextField nameField;
 	private GuiTextField passwordField;
@@ -24,10 +24,9 @@ public class MakeAccountTab extends GuiTab<AccountManagerGui> {
 		super(gui, startX, startY, 0, 0, Lists.newArrayList("Make Account"));
 		int i = (gui.width - gui.getSizeX()) / 2;
 		int j = (gui.height - gui.getSizeY()) / 2;
-		list = Lists.newArrayList();
-		list.add(new GuiFlatButton(1, i + 50, j + 88, 80, 14, "Make Account"));
+		list.add(new GuiFlatButton(1, i + 50, j + 88, 80, 14, "Make Account", new float[] { 0.5f, 1f, 0f }));
 		list.add(checkLabel = new GuiIconLabel(i + 172, j + 54, 16, 16, 0, 0, Lists.newArrayList("Blank Name")));
-		list.add(new GuiFlatButton(2, i + 135, j + 40, 50, 14, "LogOut"));
+		list.add(new GuiFlatButton(2, i + 135, j + 40, 50, 14, "LogOut", new float[] { 0.5f, 1f, 0f }));
 		checkLabel.visible = false;
 		nameField = new GuiTextField(gui.getFontRenderer(), i + 80, j + 57, 91, 12);
 		nameField.setTextColor(-1);
@@ -60,7 +59,7 @@ public class MakeAccountTab extends GuiTab<AccountManagerGui> {
 		int i = (gui.width - gui.getSizeX()) / 2;
 		int j = (gui.height - gui.getSizeY()) / 2;
 		FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
-		AccountInfo login = gui.tile.getLogInAccount();
+		AccountInfo login = gui.tile.getAccountInfo();
 		fontRenderer.drawString("LogIn : " + (login == null ? "No Account" : login.name), i, j + 43, 0xffffff, false);
 		fontRenderer.drawString("Account Name", i, j + 59, 0xffffff, false);
 		fontRenderer.drawString("Password", i, j + 75, 0xffffff, false);
@@ -73,8 +72,12 @@ public class MakeAccountTab extends GuiTab<AccountManagerGui> {
 		int id = guiButton.id;
 		if(id == 1){
 			gui.tile.tryMakeAccount(nameField.getText(), passwordField.getText());
+			nameField.setText("");
+			passwordField.setText("");
 		}else if(id == 2){
 			gui.tile.logOut();
+			nameField.setText("");
+			passwordField.setText("");
 		}
 	}
 

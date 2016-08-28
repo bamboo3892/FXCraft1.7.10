@@ -11,6 +11,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -20,12 +21,17 @@ import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.okina.fxcraft.account.IFXDealer.Result;
+import com.okina.fxcraft.account.Account.Result;
 import com.okina.fxcraft.main.FXCraft;
 import com.okina.fxcraft.rate.NoValidRateException;
+import com.okina.fxcraft.rate.RateData;
+import com.okina.fxcraft.utils.InventoryHelper;
 
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.relauncher.Side;
+import net.minecraft.init.Items;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.item.ItemStack;
 
 /**Basically server only*/
 public class AccountHandler {
@@ -164,76 +170,177 @@ public class AccountHandler {
 		return false;
 	}
 
-	public FXPosition getPosition(String id) {
-		for (Account account : accountList){
-			for (FXPosition position : account.positionList){
-				if(position.positionID.equals(id)) return position;
-			}
-		}
-		return null;
-	}
-
-	public void tryGetPosition(final IFXDealer dealer, final String accountName, final String pair, final int dealLot, final int deposit, final boolean askOrBid) {
+	/**Return result {accountName, emerald}*/
+	public void tryDispose(final IFXDealer dealer, final IInventory inv, final String accountName, final int emerald) {
 		exec.submit(new Runnable() {
 			@Override
 			public void run() {
-				try{
-					Account account = getAccount(accountName);
-					if(account == null){
-						dealer.receiveResult(FXDeal.GET_POSITION, Result.FAIL_NO_ACCOUNT, accountName);
-					}else{
-						double rate = FXCraft.rateGetter.getEarliestRate(pair);
-						Result result = account.tryGetPosition(Calendar.getInstance(), pair, dealLot, deposit, rate, askOrBid);
-						dealer.receiveResult(FXDeal.GET_POSITION, result, rate);
-					}
-				}catch (NoValidRateException e){
-					dealer.receiveResult(FXDeal.GET_POSITION, Result.FAIL_NO_VALID_RATE);
-				}catch (Exception e){
-					e.printStackTrace();
+				Account account = getAccount(accountName);
+				if(account == null){
+					dealer.receiveResult(FXDeal.DISPOSE, false, "No Such Account " + accountName, accountName, emerald);
+					return;
 				}
+				if(!InventoryHelper.tryConsumeItem(inv, new ItemStack(Items.emerald, emerald))){
+					dealer.receiveResult(FXDeal.DISPOSE, false, "No Enough Emerald", accountName, emerald);
+					return;
+				}
+				account.balance += emerald * 1000;
+				AccountUpdateHandler.instance.notifyAccountUpdate(account);
+				dealer.receiveResult(FXDeal.DISPOSE, true, "Success", accountName, emerald);
 			}
 		});
 	}
 
-	public void tryGetPositionOrder(final IFXDealer dealer, final String accountName, final String pair, final int dealLot, final int deposit, final boolean askOrBid, final double limits) {
+	/**Return result {accountName, emerald}*/
+	public void tryRealize(final IFXDealer dealer, final String accountName, final int emerald) {
 		exec.submit(new Runnable() {
 			@Override
 			public void run() {
-				try{
-					Account account = getAccount(accountName);
-					if(account == null){
-						dealer.receiveResult(FXDeal.GET_POSITION_ORDER, Result.FAIL_NO_ACCOUNT, accountName);
-					}else{
-						Result result = account.tryGetPositionOrder(Calendar.getInstance(), pair, dealLot, deposit, askOrBid, limits);
-						dealer.receiveResult(FXDeal.GET_POSITION_ORDER, result);
-					}
-				}catch (Exception e){
-					e.printStackTrace();
+				Account account = getAccount(accountName);
+				if(account == null){
+					dealer.receiveResult(FXDeal.REALIZE, false, "No Such Account " + accountName, accountName, emerald);
+					return;
 				}
+				if(account.balance < emerald * 1000){
+					dealer.receiveResult(FXDeal.REALIZE, false, "Not Enough Balance", accountName, emerald);
+					return;
+				}
+				account.balance -= emerald * 1000;
+				AccountUpdateHandler.instance.notifyAccountUpdate(account);
+				dealer.receiveResult(FXDeal.REALIZE, true, "Success", accountName, emerald);
 			}
 		});
 	}
 
-	public void trySettlePosition(final IFXDealer dealer, final String accountName, final String positionID, final int dealLot) {
+	/**Return result {accountName, LimitType}*/
+	public void tryLimitRelease(final IFXDealer dealer, final IInventory inv, final String accountName, final FXDealLimit limit) {
+		exec.submit(new Runnable() {
+			@Override
+			public void run() {
+				Account account = getAccount(accountName);
+				if(account == null){
+					dealer.receiveResult(FXDeal.LIMIT_RELEASE, false, "No Such Account " + accountName, accountName, limit);
+					return;
+				}
+				if(limit == FXDealLimit.LOT){
+					int level = account.dealLotLimit + 1;
+					if(level < 1){
+						dealer.receiveResult(FXDeal.LIMIT_RELEASE, false, "Invalid Level", accountName, limit);
+						return;
+					}else if(level > 5){
+						dealer.receiveResult(FXDeal.LIMIT_RELEASE, false, "Max Level", accountName, limit);
+						return;
+					}else{
+						if(!InventoryHelper.tryConsumeItem(inv, new ItemStack(FXCraft.limit_dealLot[level - 1], 1))){
+							dealer.receiveResult(FXDeal.LIMIT_RELEASE, false, "No Valid License", accountName, limit);
+							return;
+						}
+						account.dealLotLimit = level;
+					}
+				}else if(limit == FXDealLimit.LEVERAGE){
+					int level = account.leverageLimit + 1;
+					if(level < 1){
+						dealer.receiveResult(FXDeal.LIMIT_RELEASE, false, "Invalid Level", accountName, limit);
+						return;
+					}else if(level > 5){
+						dealer.receiveResult(FXDeal.LIMIT_RELEASE, false, "Max Level", accountName, limit);
+						return;
+					}else{
+						if(!InventoryHelper.tryConsumeItem(inv, new ItemStack(FXCraft.limit_leverage[level - 1], 1))){
+							dealer.receiveResult(FXDeal.LIMIT_RELEASE, false, "No Valid License", accountName, limit);
+							return;
+						}
+						account.leverageLimit = level;
+					}
+				}else if(limit == FXDealLimit.POSITION){
+					int level = account.positionLimit + 1;
+					if(level < 1){
+						dealer.receiveResult(FXDeal.LIMIT_RELEASE, false, "Invalid Level", accountName, limit);
+						return;
+					}else if(level > 5){
+						dealer.receiveResult(FXDeal.LIMIT_RELEASE, false, "Max Level", accountName, limit);
+						return;
+					}else{
+						if(!InventoryHelper.tryConsumeItem(inv, new ItemStack(FXCraft.limit_position[level - 1], 1))){
+							dealer.receiveResult(FXDeal.LIMIT_RELEASE, false, "No Valid License", accountName, limit);
+							return;
+						}
+						account.positionLimit = level;
+					}
+				}else if(limit == FXDealLimit.LIMITS_TRADE){
+					if(account.limitsTradePermission){
+						dealer.receiveResult(FXDeal.LIMIT_RELEASE, false, "Already Permitted", accountName, limit);
+						return;
+					}else{
+						if(!InventoryHelper.tryConsumeItem(inv, new ItemStack(FXCraft.limit_limits_trade, 1))){
+							dealer.receiveResult(FXDeal.LIMIT_RELEASE, false, "No Valid License", accountName, limit);
+							return;
+						}
+						account.limitsTradePermission = true;
+					}
+				}
+				AccountUpdateHandler.instance.notifyAccountUpdate(account);
+				dealer.receiveResult(FXDeal.LIMIT_RELEASE, true, "Success", accountName, limit);
+			}
+		});
+	}
+
+	/**Return result {accountName, reward}*/
+	public void tryGetReward(final IFXDealer dealer, final String accountName, final String reward) {
 		exec.submit(new Runnable() {
 			@Override
 			public void run() {
 				try{
 					Account account = getAccount(accountName);
 					if(account == null){
-						dealer.receiveResult(FXDeal.SETTLE_POSITION, Result.FAIL_NO_ACCOUNT, accountName);
+						dealer.receiveResult(FXDeal.REWARD, false, "No Such Account " + accountName, accountName);
 					}else{
-						FXPosition position = getPosition(positionID);
-						if(position == null){
-							dealer.receiveResult(FXDeal.SETTLE_POSITION, Result.FAIL_ILLEGAL_PARAM, positionID);
+						Reward re = RewardRegister.instance.getReward(reward);
+						if(re != null){
+							if(account.receivableReward.contains(reward)){
+								if(!account.receivedReward.contains(reward)){
+									account.receivedReward.add(reward);
+									AccountUpdateHandler.instance.notifyAccountUpdate(account);
+									dealer.receiveResult(FXDeal.REWARD, true, "Success", accountName, re);
+								}else{
+									dealer.receiveResult(FXDeal.REWARD, false, "Already Received Reward", accountName);
+								}
+							}else{
+								dealer.receiveResult(FXDeal.REWARD, false, "Cannot Receive This Reward", accountName);
+							}
 						}else{
-							double rate = FXCraft.rateGetter.getEarliestRate(position.currencyPair);
-							Result result = account.trySettlePosition(position, dealLot, rate);
-							dealer.receiveResult(FXDeal.SETTLE_POSITION, result, rate);
+							dealer.receiveResult(FXDeal.REWARD, false, "No Such Reward " + reward, accountName);
+						}
+					}
+				}catch (Exception e){
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	/**Return result<br>
+	 * Fail : {accountName}<br>
+	 * Success : {accountName, positionID}*/
+	public void tryGetPosition(final IFXDealer dealer, final String accountName, final String pair, final double dealLot, final double deposit, final boolean askOrBid) {
+		exec.submit(new Runnable() {
+			@Override
+			public void run() {
+				try{
+					Account account = getAccount(accountName);
+					if(account == null){
+						dealer.receiveResult(FXDeal.GET_POSITION, false, "No Such Account " + accountName, accountName);
+					}else{
+						RateData rate = FXCraft.rateGetter.getEarliestRate(pair);
+						Result result = account.tryGetPosition(Calendar.getInstance(), pair, dealLot, deposit, rate.open, askOrBid);
+						if(result.obj == null || result.obj.length == 0){
+							dealer.receiveResult(FXDeal.GET_POSITION, result.success, result.message, accountName);
+						}else{
+							dealer.receiveResult(FXDeal.GET_POSITION, result.success, result.message, accountName, result.obj[0]);
 						}
 					}
 				}catch (NoValidRateException e){
-					dealer.receiveResult(FXDeal.SETTLE_POSITION, Result.FAIL_NO_VALID_RATE);
+					dealer.receiveResult(FXDeal.GET_POSITION, false, "No Valid Rate", accountName);
 				}catch (Exception e){
 					e.printStackTrace();
 				}
@@ -241,21 +348,148 @@ public class AccountHandler {
 		});
 	}
 
-	public void trySettlePositionOrder(final IFXDealer dealer, final String accountName, final String positionID, final int dealLot, final double limits) {
+	/**Return result<br>
+	 * Fail : {accountName}<br>
+	 * Success : {accountName, orderID}*/
+	public void tryGetPositionOrder(final IFXDealer dealer, final String accountName, final String pair, final double dealLot, final double deposit, final boolean askOrBid, final double limits) {
 		exec.submit(new Runnable() {
 			@Override
 			public void run() {
 				try{
 					Account account = getAccount(accountName);
 					if(account == null){
-						dealer.receiveResult(FXDeal.SETTLE_POSITION_ORDER, Result.FAIL_NO_ACCOUNT, accountName);
+						dealer.receiveResult(FXDeal.GET_POSITION_ORDER, false, "No Such Account " + accountName, accountName);
 					}else{
-						FXPosition position = getPosition(positionID);
-						if(position == null){
-							dealer.receiveResult(FXDeal.SETTLE_POSITION_ORDER, Result.FAIL_ILLEGAL_PARAM, positionID);
+						Result result = account.tryGetPositionOrder(Calendar.getInstance(), pair, dealLot, deposit, askOrBid, limits);
+						if(result.obj == null || result.obj.length == 0){
+							dealer.receiveResult(FXDeal.GET_POSITION_ORDER, result.success, result.message, accountName);
 						}else{
-							Result result = account.trySettlePositionOrder(position, dealLot, limits);
-							dealer.receiveResult(FXDeal.SETTLE_POSITION_ORDER, result);
+							dealer.receiveResult(FXDeal.GET_POSITION_ORDER, result.success, result.message, accountName, result.obj[0]);
+						}
+					}
+				}catch (Exception e){
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	/**Return result<br>
+	 * Fail : {accountName}<br>
+	 * Success : {accountName, constructRate}*/
+	public void trySettlePosition(final IFXDealer dealer, final String accountName, final String positionID, final double dealLot) {
+		exec.submit(new Runnable() {
+			@Override
+			public void run() {
+				try{
+					Account account = getAccount(accountName);
+					if(account == null){
+						dealer.receiveResult(FXDeal.SETTLE_POSITION, false, "No Such Account " + accountName, accountName);
+					}else{
+						FXPosition position = account.getPosition(positionID);
+						if(position == null){
+							dealer.receiveResult(FXDeal.SETTLE_POSITION, false, "No Such Position", accountName);
+						}else{
+							RateData rate = FXCraft.rateGetter.getEarliestRate(position.currencyPair);
+							Result result = account.trySettlePosition(Calendar.getInstance(), positionID, dealLot, rate.open);
+							if(result.success){
+								dealer.receiveResult(FXDeal.SETTLE_POSITION, result.success, result.message, accountName, rate.open);
+							}else{
+								dealer.receiveResult(FXDeal.SETTLE_POSITION, result.success, result.message, accountName);
+							}
+						}
+					}
+				}catch (NoValidRateException e){
+					dealer.receiveResult(FXDeal.SETTLE_POSITION, false, "No Valid Rate", accountName);
+				}catch (Exception e){
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	/**Return result<br>
+	 * Fail : {accountName}<br>
+	 * Success : {accountName, orderID}*/
+	public void trySettlePositionOrder(final IFXDealer dealer, final String accountName, final String positionID, final double dealLot, final double limits) {
+		exec.submit(new Runnable() {
+			@Override
+			public void run() {
+				try{
+					Account account = getAccount(accountName);
+					if(account == null){
+						dealer.receiveResult(FXDeal.SETTLE_POSITION_ORDER, false, "No Such Account " + accountName, accountName);
+					}else{
+						Result result = account.trySettlePositionOrder(Calendar.getInstance(), positionID, dealLot, limits);
+						if(result.success){
+							dealer.receiveResult(FXDeal.SETTLE_POSITION_ORDER, result.success, result.message, result.obj[0]);
+						}else{
+							dealer.receiveResult(FXDeal.SETTLE_POSITION_ORDER, result.success, result.message);
+						}
+					}
+				}catch (Exception e){
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	/**Return result {accountName, orderID}*/
+	public void tryDeleteOrder(final IFXDealer dealer, final String accountName, final String orderID, final boolean isGetOrder) {
+		exec.submit(new Runnable() {
+			@Override
+			public void run() {
+				try{
+					Account account = getAccount(accountName);
+					if(account == null){
+						dealer.receiveResult(isGetOrder ? FXDeal.DELETE_GET_ORDER : FXDeal.DELETE_SETTLE_ORDER, false, "No Such Account " + accountName, accountName, orderID);
+					}else{
+						if(isGetOrder){
+							Result result = account.tryDeleteGetOrder(orderID);
+							dealer.receiveResult(FXDeal.DELETE_GET_ORDER, result.success, result.message, accountName, orderID);
+						}else{
+							Result result = account.tryDeleteSettleOrder(orderID);
+							dealer.receiveResult(FXDeal.DELETE_SETTLE_ORDER, result.success, result.message, accountName, orderID);
+						}
+					}
+				}catch (Exception e){
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	public void checkLosscutAndOrderFromPast(final Map<String, List<RateData>> dataMap) {
+		exec.submit(new Runnable() {
+			@Override
+			public void run() {
+				try{
+					for (Account account : accountList){
+						if(account.checkOrderFromPast(dataMap)){
+							FXCraft.proxy.appendPopUp(account.name + ": Limit Trade Success");
+						}
+						if(account.checkLosscutFromPast(dataMap)){
+							FXCraft.proxy.appendPopUp(account.name + ": Loss Cut!!! (Position Value Goes Below 0)");
+						}
+					}
+				}catch (Exception e){
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	public void checkLosscutAndOrder(final Map<String, RateData> dataMap) {
+		exec.submit(new Runnable() {
+			@Override
+			public void run() {
+				try{
+					for (Account account : accountList){
+						if(account.checkOrder(dataMap)){
+							FXCraft.proxy.appendPopUp(account.name + ": Limit Trade Success");
+						}
+						if(account.checkLosscut(dataMap)){
+							FXCraft.proxy.appendPopUp(account.name + ": Loss Cut!!! (Position Value Goes Below 0)");
 						}
 					}
 				}catch (Exception e){

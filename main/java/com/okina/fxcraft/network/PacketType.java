@@ -18,21 +18,27 @@ public enum PacketType {
 
 	ACCOUNT_REALIZE(6, NBTTagCompound.class),
 
-	ACCOUNT_REWARD(7, NBTTagCompound.class),
+	ACCOUNT_LIMIT_RELEASE(7, NBTTagCompound.class),
 
-	ACCOUNT_UPDATE(8, NBTTagCompound.class),
+	ACCOUNT_REWARD(8, NBTTagCompound.class),
 
-	ACCOUNT_REQUEST(9, NBTTagCompound.class),
+	ACCOUNT_UPDATE(9, NBTTagCompound.class),
 
-	FX_GET_POSITION(10, NBTTagCompound.class),
+	ACCOUNT_REQUEST(10, NBTTagCompound.class),
 
-	FX_SETTLE_POSITION(11, NBTTagCompound.class),
+	FX_GET_POSITION(11, NBTTagCompound.class),
 
-	FX_ORDER_GET_POSITION(12, NBTTagCompound.class),
+	FX_SETTLE_POSITION(12, NBTTagCompound.class),
 
-	FX_ORDER_SETTLE_POSITION(13, NBTTagCompound.class),
+	FX_ORDER_GET_POSITION(13, NBTTagCompound.class),
 
-	MESSAGE(14, String.class);
+	FX_ORDER_SETTLE_POSITION(14, NBTTagCompound.class),
+
+	FX_DELETE_GET_ORDER(15, NBTTagCompound.class),
+
+	FX_DELETE_SETTLE_ORDER(16, NBTTagCompound.class),
+
+	MESSAGE(17, String.class);
 
 	public final int id;
 	public final Class<?> valueClass;

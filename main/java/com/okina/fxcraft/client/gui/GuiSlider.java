@@ -77,7 +77,7 @@ public class GuiSlider extends GuiButton {
 				color = 0xFFFFFF;
 			}
 			color = 0xFFFFFF;
-			String str = Integer.toString(value + dragValue);
+			String str = String.valueOf((int) (value + dragValue));
 			fontrenderer.drawString(str, xPosition + width / 2 - fontrenderer.getStringWidth(str) / 2, yPosition + (height - 8) / 2, color, false);
 
 			GL11.glPopAttrib();
@@ -148,10 +148,12 @@ public class GuiSlider extends GuiButton {
 
 	public void setMinValue(int minValue) {
 		this.minValue = minValue;
+		value = Math.max(value, minValue);
 	}
 
 	public void setMaxValue(int maxValue) {
 		this.maxValue = maxValue;
+		value = Math.min(value, maxValue);
 	}
 
 	public void setInterval(int interval) {

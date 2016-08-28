@@ -18,10 +18,11 @@ public class GuiPositionTable extends GuiTable<GuiPositionTableRow> {
 		AccountInfo info = accountContainer.getAccountInfo();
 		if(info != null){
 			rowList.clear();
-			rowList.add(titleRow);
 			for (FXPosition position : info.positionList){
 				rowList.add(new GuiPositionTableRow(titleRow, position));
 			}
+			rowList.sort(GuiPositionTableRow.COMPARATOR);
+			rowList.add(0, titleRow);
 			lastAccountUpdate = System.currentTimeMillis();
 		}
 	}
@@ -33,10 +34,11 @@ public class GuiPositionTable extends GuiTable<GuiPositionTableRow> {
 				AccountInfo info = accountContainer.getAccountInfo();
 				if(info != null){
 					rowList.clear();
-					rowList.add(titleRow);
 					for (FXPosition position : info.positionList){
 						rowList.add(new GuiPositionTableRow(titleRow, position));
 					}
+					rowList.sort(GuiPositionTableRow.COMPARATOR);
+					rowList.add(0, titleRow);
 					lastAccountUpdate = System.currentTimeMillis();
 				}
 			}

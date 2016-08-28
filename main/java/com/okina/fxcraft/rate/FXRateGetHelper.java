@@ -10,12 +10,18 @@ import java.util.Calendar;
 import java.util.Comparator;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Map;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.okina.fxcraft.utils.UtilMethods;
 
 public class FXRateGetHelper {
 
+	public static final int TERM_REALTIME = 10;
 	public static final int TERM_1m = 0;
 	public static final int TERM_15m = 1;
 	public static final int TERM_60m = 2;
@@ -32,6 +38,8 @@ public class FXRateGetHelper {
 	 * Sample<blockquote>http://info.finance.yahoo.co.jp/fx/async/getHistory/?code=usdjpy&candle_period=1m&results=200&start=1</blockquote><br>
 	 */
 	private static final String[] YAHOO_ADDRESS = { "http://info.finance.yahoo.co.jp/fx/async/getHistory/?code=", "&candle_period=", "&results=200&start=1" };
+	private static final String YAHOO_REALTIME = "http://info.finance.yahoo.co.jp/fx/async/getRate/";
+
 	public static final String[] REQUEST_TERMS = { "1m", "15m", "60m", "1d", "1w", "1M" };
 	public static final Comparator<RateData> DATA_COMPARATOR = new Comparator<RateData>() {
 		@Override
@@ -40,10 +48,10 @@ public class FXRateGetHelper {
 		}
 	};
 
-	public static List<RateData> getHistory(String value, String basis, String term) {
+	public static List<RateData> getHistory(String pair, String term) {
 		/*Data Format : { { Date, High, Low, Open, End } , { Date, High, Low, Open, End } , { Date, High, Low, Open, End } }*/
 		try{
-			URL url = new URL(YAHOO_ADDRESS[0] + value + basis + YAHOO_ADDRESS[1] + term + YAHOO_ADDRESS[2]);
+			URL url = new URL(YAHOO_ADDRESS[0] + pair + YAHOO_ADDRESS[1] + term + YAHOO_ADDRESS[2]);
 			HttpURLConnection connection = null;
 			try{
 				connection = (HttpURLConnection) url.openConnection();
@@ -119,55 +127,62 @@ public class FXRateGetHelper {
 		return null;
 	}
 
-	//	/**Use only on server*/
-	//	public Map<String, RateData> getRate() {
-	//		Map<String, RateData> map = Maps.newHashMap();
-	//		try{
-	//			URL url = new URL(GAITAME_ADDRESS);
-	//			HttpURLConnection connection = null;
-	//			try{
-	//				connection = (HttpURLConnection) url.openConnection();
-	//				connection.setRequestMethod("GET");
-	//				if(connection.getResponseCode() == HttpURLConnection.HTTP_OK){
-	//					InputStreamReader isr = null;
-	//					BufferedReader reader = null;
-	//					try{
-	//						Calendar calendar = Calendar.getInstance();
-	//						isr = new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8);
-	//						reader = new BufferedReader(isr);
-	//						StringBuilder builder = new StringBuilder();
-	//						String line;
-	//						while ((line = reader.readLine()) != null){
-	//							builder.append(line);
-	//						}
-	//						Gson gson = new Gson();
-	//						RawRateDatas results = gson.fromJson(builder.toString(), RawRateDatas.class);
-	//						for (RawRateData rawData : results.quotes){
-	//							RateData data = rawData.getData(calendar);
-	//							map.put(rawData.currencyPairCode, data);
-	//						}
-	//					}finally{
-	//						if(isr != null){
-	//							isr.close();
-	//						}
-	//						if(reader != null){
-	//							reader.close();
-	//						}
-	//					}
-	//				}
-	//			}finally{
-	//				if(connection != null){
-	//					connection.disconnect();
-	//				}
-	//			}
-	//		}catch (IOException e){
-	//			e.printStackTrace();
-	//		}
-	//		return map;
-	//	}
+	public static Map<String, RateData> getRealtimeData() {
+		Map<String, RateData> map = Maps.newHashMap();
+		Calendar date = Calendar.getInstance();
+		try{
+			URL url = new URL(YAHOO_REALTIME);
+			HttpURLConnection connection = null;
+			try{
+				connection = (HttpURLConnection) url.openConnection();
+				connection.setRequestMethod("GET");
+				if(connection.getResponseCode() == HttpURLConnection.HTTP_OK){
+					InputStreamReader isr = null;
+					BufferedReader reader = null;
+					try{
+						isr = new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8);
+						reader = new BufferedReader(isr);
+						String line;
+						StringBuilder builder = new StringBuilder();
+						List<RateData> dataList = Lists.newArrayList();
+						while ((line = reader.readLine()) != null){
+							builder.append(line);
+						}
+						try{
+							JSONObject json = new JSONObject(builder.toString());
+							for (String pair : JSONObject.getNames(json)){
+								JSONObject o = json.getJSONObject(pair);
+								if(o.has("Ask")){
+									map.put(pair, new RateData(date, o.getDouble("High"), o.getDouble("Low"), o.getDouble("Ask")));
+								}
+							}
+						}catch (JSONException e){
+							e.printStackTrace();
+						}
+					}finally{
+						if(isr != null){
+							isr.close();
+						}
+						if(reader != null){
+							reader.close();
+						}
+					}
+				}
+			}finally{
+				if(connection != null){
+					connection.disconnect();
+				}
+			}
+		}catch (IOException e){
+			e.printStackTrace();
+		}
+		return map;
+	}
 
 	public static long getTermMills(int term) {
 		switch (term) {
+		case TERM_REALTIME:
+			return 4000L;
 		case TERM_1m:
 			return 60000L;
 		case TERM_15m:
@@ -187,6 +202,8 @@ public class FXRateGetHelper {
 
 	public static String getCalendarString(Calendar calendar, int term) {
 		switch (term) {
+		case TERM_REALTIME:
+			return calendar.get(Calendar.HOUR_OF_DAY) + ":" + UtilMethods.zeroFill(calendar.get(Calendar.MINUTE), 2) + ":" + UtilMethods.zeroFill(calendar.get(Calendar.SECOND), 2);
 		case TERM_1m:
 			return (calendar.get(Calendar.MONTH) + 1) + "/" + calendar.get(Calendar.DAY_OF_MONTH) + " " + calendar.get(Calendar.HOUR_OF_DAY) + ":" + UtilMethods.zeroFill(calendar.get(Calendar.MINUTE), 2);
 		case TERM_15m:
@@ -206,8 +223,8 @@ public class FXRateGetHelper {
 
 	public static boolean isValidRateData(RateData rate) {
 		//TODO
-		//		return rate == null ? false : Calendar.getInstance().getTimeInMillis() - rate.calendar.getTimeInMillis() <= 10000;
-		return rate != null;
+		return rate == null ? false : Calendar.getInstance().getTimeInMillis() - rate.calendar.getTimeInMillis() <= 10000;
+		//		return rate != null;
 	}
 
 	private class RawRateDatas {

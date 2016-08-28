@@ -19,6 +19,37 @@ public class InventoryHelper {
 	public static final int AS_MANY_AS_POSSIBLE = 1;
 	public static final int WHOLE = 2;
 
+	public static boolean tryConsumeItem(IInventory inv, ItemStack item) {
+		int count1 = 0;
+		for (int slot = 0; slot < inv.getSizeInventory(); slot++){
+			if(inv.getStackInSlot(slot) != null){
+				if(inv.getStackInSlot(slot).isItemEqual(item)){
+					count1 += inv.getStackInSlot(slot).stackSize;
+					if(count1 >= item.stackSize) break;
+				}
+			}
+		}
+		if(count1 < item.stackSize){
+			return false;
+		}
+		int count2 = item.stackSize;
+		for (int slot = 0; slot < inv.getSizeInventory(); slot++){
+			if(inv.getStackInSlot(slot) != null){
+				if(inv.getStackInSlot(slot).isItemEqual(item)){
+					int size = Math.min(count2, inv.getStackInSlot(slot).stackSize);
+					count2 -= size;
+					inv.getStackInSlot(slot).stackSize -= size;
+					if(inv.getStackInSlot(slot).stackSize <= 0){
+						inv.setInventorySlotContents(slot, null);
+					}
+					if(count1 <= 0) break;
+				}
+			}
+		}
+		inv.markDirty();
+		return true;
+	}
+
 	/**Returns true if any item moved*/
 	public static boolean tryPushItemEX(IInventory start, IInventory goal, ForgeDirection startSide, ForgeDirection goalSide, int amount) {
 		if(start == null && amount <= 0) return false;

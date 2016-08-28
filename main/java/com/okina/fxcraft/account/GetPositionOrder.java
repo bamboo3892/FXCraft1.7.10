@@ -3,6 +3,8 @@ package com.okina.fxcraft.account;
 import java.util.Calendar;
 import java.util.UUID;
 
+import com.okina.fxcraft.rate.RateData;
+
 import net.minecraft.nbt.NBTTagCompound;
 
 public class GetPositionOrder implements Cloneable {
@@ -15,18 +17,10 @@ public class GetPositionOrder implements Cloneable {
 		NO_INFO.orderID = "No Info";
 	}
 
-	public static final int FIELD_DATE = 0;
-	public static final int FIELD_PAIR = 1;
-	public static final int FIELD_LOT = 2;
-	public static final int FIELD_DEPOSIT = 3;
-	public static final int FIELD_ASK_BID = 4;
-	public static final int FIELD_LIMITS = 5;
-	public static final int FIELD_ID = 6;
-
 	public Calendar contractDate;
 	public String currencyPair;
-	public int lot;
-	public int depositLot;
+	public double lot;
+	public double depositLot;
 	public boolean askOrBid = true;//True: Ask, False: Bid
 	public double limits;
 	public String orderID;
@@ -35,7 +29,7 @@ public class GetPositionOrder implements Cloneable {
 		orderID = UUID.randomUUID().toString();
 	}
 
-	public GetPositionOrder(Calendar date, String pair, int lot, int deposit, boolean askOrBid, double limits) {
+	public GetPositionOrder(Calendar date, String pair, double lot, double deposit, boolean askOrBid, double limits) {
 		this();
 		this.contractDate = date;
 		this.currencyPair = pair;
@@ -45,32 +39,11 @@ public class GetPositionOrder implements Cloneable {
 		this.limits = limits;
 	}
 
-	public String getField(int field) {
-		switch (field) {
-		case FIELD_DATE:
-			return String.valueOf(contractDate);
-		case FIELD_PAIR:
-			return String.valueOf(currencyPair);
-		case FIELD_LOT:
-			return String.valueOf(lot);
-		case FIELD_DEPOSIT:
-			return String.valueOf(depositLot);
-		case FIELD_ASK_BID:
-			return String.valueOf(askOrBid);
-		case FIELD_LIMITS:
-			return String.valueOf(limits);
-		case FIELD_ID:
-			return String.valueOf(orderID);
-		default:
-			return null;
-		}
-	}
-
 	public void writeToNBT(NBTTagCompound tag) {
 		tag.setLong("date", contractDate.getTimeInMillis());
 		tag.setString("currencyPair", currencyPair);
-		tag.setInteger("lot", lot);
-		tag.setInteger("depositLot", depositLot);
+		tag.setDouble("lot", lot);
+		tag.setDouble("depositLot", depositLot);
 		tag.setBoolean("askOrBid", askOrBid);
 		tag.setDouble("limits", limits);
 		tag.setString("id", orderID);
@@ -80,8 +53,8 @@ public class GetPositionOrder implements Cloneable {
 		contractDate = Calendar.getInstance();
 		contractDate.setTimeInMillis(tag.getLong("date"));
 		currencyPair = tag.getString("currencyPair");
-		lot = tag.getInteger("lot");
-		depositLot = tag.getInteger("depositLot");
+		lot = tag.getDouble("lot");
+		depositLot = tag.getDouble("depositLot");
 		askOrBid = tag.getBoolean("askOrBid");
 		limits = tag.getDouble("limits");
 		orderID = tag.getString("id");
@@ -100,10 +73,27 @@ public class GetPositionOrder implements Cloneable {
 		return order;
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		return o instanceof GetPositionOrder && orderID.equals(((GetPositionOrder) o).orderID);
+	}
+
 	public static GetPositionOrder getGetPositionOrderFromNBT(NBTTagCompound tag) {
 		GetPositionOrder order = new GetPositionOrder();
 		order.readFromNBT(tag);
 		return order;
+	}
+
+	public boolean checkConstruct(RateData data) {
+		//		System.out.println(FXRateGetHelper.getCalendarString(contractDate, 0) + ", " + FXRateGetHelper.getCalendarString(data.calendar, 0));
+		if(contractDate.compareTo(data.calendar) <= 0){
+			if(askOrBid){
+				return limits >= data.open;
+			}else{
+				return limits <= data.open;
+			}
+		}
+		return false;
 	}
 
 }

@@ -28,7 +28,7 @@ public class GuiFXChart extends GuiButton {
 	private long updateMills = 0L;
 	private boolean isClicked = false;
 	private String displayPair = "USDJPY";
-	private int displayTerm = 0;
+	private int displayTerm = FXRateGetHelper.TERM_REALTIME;
 	private int displayDataMaxSize = 200;
 
 	public GuiFXChart(int startX, int startY, int sizeX, int sizeY) {

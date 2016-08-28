@@ -1,5 +1,7 @@
 package com.okina.fxcraft.client.gui;
 
+import java.awt.Color;
+
 import org.lwjgl.opengl.GL11;
 
 import com.okina.fxcraft.main.FXCraft;
@@ -15,10 +17,12 @@ public class GuiFlatButton extends GuiButton {
 
 	private final static ResourceLocation TEXTURE = new ResourceLocation(FXCraft.MODID + ":textures/gui/container/flat_button.png");
 
+	private float[] selectedColor;
 	private boolean isClicked = false;
 
-	public GuiFlatButton(int buttonID, int startX, int startY, int sizeX, int sizeY, String display) {
+	public GuiFlatButton(int buttonID, int startX, int startY, int sizeX, int sizeY, String display, float[] selectedColor) {
 		super(buttonID, startX, startY, sizeX, sizeY, display);
+		this.selectedColor = selectedColor;
 	}
 
 	@Override
@@ -44,6 +48,7 @@ public class GuiFlatButton extends GuiButton {
 				drawTexturedModalRect(xPosition, yPosition, offsetX, offsetY, width - 1, height - 1);
 				drawTexturedModalRect(xPosition, yPosition, offsetX + 128 - width, offsetY + 128 - height, width, height);
 			}else if(isClicked){
+				GL11.glColor4f(selectedColor[0], selectedColor[1], selectedColor[2], 0.5F);
 				drawTexturedModalRect(xPosition + 1, yPosition + 1, 0, 128, width - 2, height - 2);
 				drawTexturedModalRect(xPosition + 1, yPosition + 1, 0 + 128 - width, 256 - height, width - 2, height - 2);
 				//				this.drawTexturedModalRect(this.xPosition + 1, this.yPosition + 1, 0 + 128 - this.width, 128, this.width - 2, this.height - 2);
@@ -55,6 +60,7 @@ public class GuiFlatButton extends GuiButton {
 					drawTexturedModalRect(xPosition, yPosition, offsetX, offsetY, width - 1, height - 1);
 					drawTexturedModalRect(xPosition, yPosition, offsetX + 128 - width, offsetY + 128 - height, width, height);
 				}else{//enabled, hovering
+					GL11.glColor4f(selectedColor[0], selectedColor[1], selectedColor[2], 0.5F);
 					offsetX = 128;
 					offsetY = 0;
 					drawTexturedModalRect(xPosition, yPosition, offsetX, offsetY, width, height);
@@ -66,8 +72,11 @@ public class GuiFlatButton extends GuiButton {
 			mouseDragged(minecraft, mouseX, mouseY);
 
 			int color;
-			if(isClicked || k == 2){
+			if(!enabled){
+				color = 0xc0c0c0;
+			}else if(isClicked || k == 2){
 				color = 0x808080;
+				color = new Color(selectedColor[0], selectedColor[1], selectedColor[2]).darker().darker().getRGB();
 			}else{
 				color = 0xFFFFFF;
 			}

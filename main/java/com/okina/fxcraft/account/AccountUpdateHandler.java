@@ -20,11 +20,13 @@ public class AccountUpdateHandler {
 		}
 	}
 
-	public void notifyAccountUpdate(AccountInfo account) {
+	public void notifyAccountUpdate(Account account) {
+		RewardRegister.instance.updateAccountReward(account);
+		AccountInfo info = account.getInfo();
 		for (int i = 0; i < containerList.size(); i++){
 			IAccountInfoContainer container = containerList.get(i);
 			if(container.isValid()){
-				container.updateAccountInfo(account);
+				container.updateAccountInfo(info);
 			}else{
 				containerList.remove(i);
 				i--;

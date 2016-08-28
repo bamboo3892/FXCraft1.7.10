@@ -1,9 +1,18 @@
 package com.okina.fxcraft.utils;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.Point;
+
+import com.google.common.collect.Maps;
+import com.okina.fxcraft.account.AccountInfo;
+import com.okina.fxcraft.account.FXPosition;
+import com.okina.fxcraft.account.GetPositionOrder;
+import com.okina.fxcraft.account.SettlePositionOrder;
+import com.okina.fxcraft.rate.FXRateGetHelper;
+import com.okina.fxcraft.rate.RateData;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
@@ -120,6 +129,53 @@ public class UtilMethods {
 				}
 			}
 		}
+	}
+
+	public static HashMap<String, Object> getTableFromRate(RateData rate) {
+		HashMap<String, Object> map = Maps.newHashMap();
+		map.put("rate", rate.open);
+		map.put("date", FXRateGetHelper.getCalendarString(rate.calendar, -1));
+		return map;
+	}
+
+	public static HashMap<String, Object> getTableFromPosition(FXPosition position) {
+		HashMap<String, Object> map = Maps.newHashMap();
+		map.put("date", FXRateGetHelper.getCalendarString(position.contractDate, -1));
+		map.put("pair", position.currencyPair);
+		map.put("lot", position.lot);
+		map.put("deposit", position.depositLot);
+		map.put("askOrBid", position.askOrBid);
+		map.put("rate", position.contractRate);
+		map.put("positionID", position.positionID);
+		return map;
+	}
+
+	public static HashMap<String, Object> getTableFromGetOrder(GetPositionOrder order) {
+		HashMap<String, Object> map = Maps.newHashMap();
+		map.put("date", FXRateGetHelper.getCalendarString(order.contractDate, -1));
+		map.put("pair", order.currencyPair);
+		map.put("lot", order.lot);
+		map.put("deposit", order.depositLot);
+		map.put("askOrBid", order.askOrBid);
+		map.put("limits", order.limits);
+		map.put("orderID", order.orderID);
+		return map;
+	}
+
+	public static HashMap<String, Object> getTableFromSettleOrder(SettlePositionOrder order) {
+		HashMap<String, Object> map = Maps.newHashMap();
+		map.put("position", getTableFromPosition(order.position));
+		map.put("date", FXRateGetHelper.getCalendarString(order.contractDate, -1));
+		map.put("limits", order.limits);
+		map.put("orderID", order.position.positionID);
+		return map;
+	}
+
+	public static HashMap<String, Object> getTableFromAccount(AccountInfo account) {
+		HashMap<String, Object> map = Maps.newHashMap();
+		map.put("name", account.name);
+		map.put("balance", account.balance);
+		return map;
 	}
 
 }

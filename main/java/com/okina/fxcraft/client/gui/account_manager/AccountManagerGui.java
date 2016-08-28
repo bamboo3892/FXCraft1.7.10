@@ -26,10 +26,12 @@ public class AccountManagerGui extends GuiTabbedPane {
 	private static final int TEXTURE_Y_SIZE2 = 90;
 	private List<GuiTab> tabList = Lists.newArrayList();
 	protected AccountManegerTileEntity tile;
+	protected EntityPlayer player;
 
 	public AccountManagerGui(EntityPlayer player, AccountManegerTileEntity tile) {
 		super(new AccountManagerContainer(player));
 		this.tile = tile;
+		this.player = player;
 		xSize = 176;
 		ySize = 200;
 	}

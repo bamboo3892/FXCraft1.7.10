@@ -1,11 +1,19 @@
 package com.okina.fxcraft.client.gui.fxdealer;
 
+import java.util.Comparator;
 import java.util.Objects;
 
 import com.okina.fxcraft.account.FXPosition;
 import com.okina.fxcraft.client.gui.GuiTableRow;
 
 public class GuiPositionTableRow extends GuiTableRow {
+
+	public static final Comparator COMPARATOR = new Comparator<GuiPositionTableRow>() {
+		@Override
+		public int compare(GuiPositionTableRow row1, GuiPositionTableRow row2) {
+			return row1.position.contractDate.compareTo(row2.position.contractDate);
+		}
+	};
 
 	private boolean isTitle;
 	protected FXPosition position;

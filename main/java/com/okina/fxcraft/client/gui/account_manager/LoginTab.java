@@ -23,8 +23,8 @@ public class LoginTab extends GuiTab<AccountManagerGui> {
 		int i = (gui.width - gui.getSizeX()) / 2;
 		int j = (gui.height - gui.getSizeY()) / 2;
 		list = Lists.newArrayList();
-		list.add(new GuiFlatButton(1, i + 65, j + 88, 50, 14, "LogIn"));
-		list.add(new GuiFlatButton(2, i + 135, j + 40, 50, 14, "LogOut"));
+		list.add(new GuiFlatButton(1, i + 65, j + 88, 50, 14, "LogIn", new float[] { 0.5f, 1f, 0f }));
+		list.add(new GuiFlatButton(2, i + 135, j + 40, 50, 14, "LogOut", new float[] { 0.5f, 1f, 0f }));
 		nameField = new GuiTextField(gui.getFontRenderer(), i + 80, j + 57, 91, 12);
 		nameField.setTextColor(-1);
 		nameField.setDisabledTextColour(-1);
@@ -42,7 +42,7 @@ public class LoginTab extends GuiTab<AccountManagerGui> {
 		int i = (gui.width - gui.getSizeX()) / 2;
 		int j = (gui.height - gui.getSizeY()) / 2;
 		FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
-		AccountInfo login = gui.tile.getLogInAccount();
+		AccountInfo login = gui.tile.getAccountInfo();
 		fontRenderer.drawString("LogIn : " + (login == null ? "No Account" : login.name), i, j + 43, 0xffffff, false);
 		fontRenderer.drawString("Account Name", i, j + 59, 0xffffff, false);
 		fontRenderer.drawString("Password", i, j + 75, 0xffffff, false);
@@ -55,8 +55,12 @@ public class LoginTab extends GuiTab<AccountManagerGui> {
 		int id = guiButton.id;
 		if(id == 1){
 			gui.tile.tryLogIn(nameField.getText() == null ? "" : nameField.getText(), passwordField.getText() == null ? "" : passwordField.getText());
+			nameField.setText("");
+			passwordField.setText("");
 		}else if(id == 2){
 			gui.tile.logOut();
+			nameField.setText("");
+			passwordField.setText("");
 		}
 	}
 

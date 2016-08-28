@@ -1,7 +1,8 @@
 [
 {
+  "modid": "FXCraft",
   "name": "FXCraft",
-  "description": "This is a mod",
+  "description": "This is a mod, not a pen.",
   "mcversion": "${mcversion}",
   "url": "",
   "updateUrl": "",

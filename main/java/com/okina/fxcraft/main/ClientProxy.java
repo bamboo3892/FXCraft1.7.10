@@ -5,11 +5,17 @@ import static com.okina.fxcraft.main.FXCraft.*;
 import java.io.File;
 import java.util.Comparator;
 
+import com.okina.fxcraft.client.model.ModelJentleArmor;
+import com.okina.fxcraft.client.renderer.BlockAccountManagerRenderer;
 import com.okina.fxcraft.network.SimpleTilePacket;
 
+import cpw.mods.fml.client.registry.RenderingRegistry;
 import net.minecraft.world.World;
 
 public class ClientProxy extends CommonProxy {
+
+	public static ModelJentleArmor modelJentlemensCap;
+	public static ModelJentleArmor modelJentlemensPanz;
 
 	@Override
 	protected void loadConfiguration(File pfile) {
@@ -17,7 +23,12 @@ public class ClientProxy extends CommonProxy {
 	}
 
 	@Override
-	protected void registerRenderer() {}
+	protected void registerRenderer() {
+		RenderingRegistry.registerBlockHandler(new BlockAccountManagerRenderer());
+		modelJentlemensCap = new ModelJentleArmor();
+		modelJentlemensPanz = new ModelJentleArmor();
+		modelJentlemensPanz.leg = true;
+	}
 
 	@Override
 	public void sendPacketToServer(SimpleTilePacket packet) {

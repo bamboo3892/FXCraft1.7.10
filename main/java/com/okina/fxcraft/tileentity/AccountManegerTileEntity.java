@@ -2,6 +2,11 @@ package com.okina.fxcraft.tileentity;
 
 import com.okina.fxcraft.account.AccountHandler;
 import com.okina.fxcraft.account.AccountInfo;
+import com.okina.fxcraft.account.AccountUpdateHandler;
+import com.okina.fxcraft.account.FXDeal;
+import com.okina.fxcraft.account.FXDealLimit;
+import com.okina.fxcraft.account.IFXDealer;
+import com.okina.fxcraft.account.Reward;
 import com.okina.fxcraft.client.gui.account_manager.AccountManagerContainer;
 import com.okina.fxcraft.client.gui.account_manager.AccountManagerGui;
 import com.okina.fxcraft.main.FXCraft;
@@ -13,12 +18,19 @@ import com.okina.fxcraft.utils.Position;
 
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.relauncher.Side;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraftforge.common.util.ForgeDirection;
 
-public class AccountManegerTileEntity extends TileEntity implements IGuiTile, ISimpleTilePacketUser {
+public class AccountManegerTileEntity extends TileEntity implements IGuiTile, ISimpleTilePacketUser, IFXDealer {
 
+	private long lastAccountUpdate = 100;
 	private AccountInfo loginAccount;
 
 	//client only
@@ -58,15 +70,105 @@ public class AccountManegerTileEntity extends TileEntity implements IGuiTile, IS
 		FXCraft.proxy.sendPacketToServer(new SimpleTilePacket(this, PacketType.ACCOUNT_LOGIN, tag));
 	}
 
-	public AccountInfo getLogInAccount() {
+	public boolean hasAccountUpdate(long lastAccountUpdate) {
+		return this.lastAccountUpdate > lastAccountUpdate;
+	}
+
+	public AccountInfo getAccountInfo() {
 		return loginAccount;
 	}
 
 	public void logOut() {
 		FXCraft.proxy.sendPacketToServer(new SimpleTilePacket(this, PacketType.ACCOUNT_LOGOUT, 0));
+		loginAccount = null;
+		lastAccountUpdate = System.currentTimeMillis();
+	}
+
+	public void tryDispose(EntityPlayer player, int emerald) {
+		if(loginAccount != null){
+			NBTTagCompound tag = new NBTTagCompound();
+			tag.setString("account", loginAccount.name);
+			tag.setInteger("emerald", emerald);
+			tag.setString("player", player.getCommandSenderName());
+			FXCraft.proxy.sendPacketToServer(new SimpleTilePacket(this, PacketType.ACCOUNT_DISPOSE, tag));
+		}else{
+			FXCraft.proxy.appendPopUp("Please Login");
+		}
+	}
+
+	public void tryRealize(int emerald) {
+		if(loginAccount != null){
+			NBTTagCompound tag = new NBTTagCompound();
+			tag.setString("account", loginAccount.name);
+			tag.setInteger("emerald", emerald);
+			FXCraft.proxy.sendPacketToServer(new SimpleTilePacket(this, PacketType.ACCOUNT_REALIZE, tag));
+		}else{
+			FXCraft.proxy.appendPopUp("Please Login");
+		}
+	}
+
+	public void tryLimitRelease(EntityPlayer player, FXDealLimit limit) {
+		if(loginAccount != null){
+			NBTTagCompound tag = new NBTTagCompound();
+			tag.setString("account", loginAccount.name);
+			tag.setString("type", limit.name());
+			tag.setString("player", player.getCommandSenderName());
+			FXCraft.proxy.sendPacketToServer(new SimpleTilePacket(this, PacketType.ACCOUNT_LIMIT_RELEASE, tag));
+		}else{
+			FXCraft.proxy.appendPopUp("Please Login");
+		}
+	}
+
+	public void tryGetReward(EntityPlayer player, String reward) {
+		if(loginAccount != null){
+			NBTTagCompound tag = new NBTTagCompound();
+			tag.setString("account", loginAccount.name);
+			tag.setString("reward", reward);
+			FXCraft.proxy.sendPacketToServer(new SimpleTilePacket(this, PacketType.ACCOUNT_REWARD, tag));
+		}else{
+			FXCraft.proxy.appendPopUp("Please Login");
+		}
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	@Override
+	public void validate() {
+		super.validate();
+		AccountUpdateHandler.instance.registerUpdateObject(this);
+	}
+
+	@Override
+	public boolean isValid() {
+		return !isInvalid();
+	}
+
+	/**Server only*/
+	@Override
+	public void updateAccountInfo(AccountInfo account) {
+		if(account.equals(loginAccount)){
+			loginAccount = account;
+			lastAccountUpdate = System.currentTimeMillis();
+			NBTTagCompound tag = new NBTTagCompound();
+			account.writeToNBT(tag);
+			FXCraft.proxy.sendPacketToClient(new SimpleTilePacket(this, PacketType.ACCOUNT_UPDATE, tag));
+		}
+	}
+
+	@Override
+	public void receiveResult(FXDeal deal, boolean success, String message, Object... obj) {
+		ForgeDirection dir = ForgeDirection.getOrientation(getBlockMetadata());
+		if(deal == FXDeal.REALIZE){
+			if(success){
+				worldObj.spawnEntityInWorld(new EntityItem(worldObj, xCoord + 0.5 + dir.offsetX, yCoord + 0.5 + dir.offsetY, zCoord + 0.5 + dir.offsetZ, new ItemStack(Items.emerald, (Integer) obj[1])));
+			}
+		}else if(deal == FXDeal.REWARD){
+			if(success){
+				worldObj.spawnEntityInWorld(new EntityItem(worldObj, xCoord + 0.5 + dir.offsetX, yCoord + 0.5 + dir.offsetY, zCoord + 0.5 + dir.offsetZ, ((Reward) obj[1]).getItem()));
+			}
+		}
+		FXCraft.proxy.sendPacketToClient(new SimpleTilePacket(this, PacketType.MESSAGE, deal + ": " + message));
+	}
 
 	@Override
 	public Object getGuiElement(EntityPlayer player, int side, boolean serverSide) {
@@ -97,6 +199,7 @@ public class AccountManegerTileEntity extends TileEntity implements IGuiTile, IS
 					info.writeToNBT(infoTag);
 					tag.setTag("info", infoTag);
 					loginAccount = info;
+					lastAccountUpdate = System.currentTimeMillis();
 					FXCraft.proxy.sendPacketToClient(new SimpleTilePacket(this, PacketType.ACCOUNT_MAKE, tag));
 				}else{
 					tag.setBoolean("result", false);
@@ -115,6 +218,7 @@ public class AccountManegerTileEntity extends TileEntity implements IGuiTile, IS
 					tag.setBoolean("result", true);
 					tag.removeTag("password");
 					loginAccount = info;
+					lastAccountUpdate = System.currentTimeMillis();
 					FXCraft.proxy.sendPacketToClient(new SimpleTilePacket(this, PacketType.ACCOUNT_LOGIN, tag));
 				}else{
 					tag.setBoolean("result", false);
@@ -124,6 +228,55 @@ public class AccountManegerTileEntity extends TileEntity implements IGuiTile, IS
 			}else if(type == PacketType.ACCOUNT_LOGOUT && value instanceof Integer){
 				FXCraft.proxy.sendPacketToClient(new SimpleTilePacket(this, PacketType.ACCOUNT_LOGOUT, 0));
 				loginAccount = null;
+				lastAccountUpdate = System.currentTimeMillis();
+			}else if(type == PacketType.ACCOUNT_DISPOSE && value instanceof NBTTagCompound){
+				NBTTagCompound tag = (NBTTagCompound) value;
+				String accountName = tag.getString("account");
+				if(loginAccount != null && !"".equals(accountName) && accountName.equals(loginAccount.name)){
+					int emerald = tag.getInteger("emerald");
+					String playerName = tag.getString("player");
+					EntityPlayerMP player = MinecraftServer.getServer().getConfigurationManager().func_152612_a(playerName);
+					if(player == null){
+						FXCraft.proxy.sendPacketToClient(new SimpleTilePacket(this, PacketType.MESSAGE, "Invalid Player"));
+					}else{
+						AccountHandler.instance.tryDispose(this, player.inventory, accountName, emerald);
+					}
+				}else{
+					FXCraft.proxy.sendPacketToClient(new SimpleTilePacket(this, PacketType.MESSAGE, "Illegal Account Name"));
+				}
+			}else if(type == PacketType.ACCOUNT_REALIZE && value instanceof NBTTagCompound){
+				NBTTagCompound tag = (NBTTagCompound) value;
+				String accountName = tag.getString("account");
+				if(loginAccount != null && !"".equals(accountName) && accountName.equals(loginAccount.name)){
+					int emerald = tag.getInteger("emerald");
+					AccountHandler.instance.tryRealize(this, accountName, emerald);
+				}else{
+					FXCraft.proxy.sendPacketToClient(new SimpleTilePacket(this, PacketType.MESSAGE, "Illegal Account Name"));
+				}
+			}else if(type == PacketType.ACCOUNT_LIMIT_RELEASE && value instanceof NBTTagCompound){
+				NBTTagCompound tag = (NBTTagCompound) value;
+				String accountName = tag.getString("account");
+				if(loginAccount != null && !"".equals(accountName) && accountName.equals(loginAccount.name)){
+					FXDealLimit limit = FXDealLimit.valueOf(tag.getString("type"));
+					String playerName = tag.getString("player");
+					EntityPlayerMP player = MinecraftServer.getServer().getConfigurationManager().func_152612_a(playerName);
+					if(player == null){
+						FXCraft.proxy.sendPacketToClient(new SimpleTilePacket(this, PacketType.MESSAGE, "Invalid Player"));
+					}else{
+						AccountHandler.instance.tryLimitRelease(this, player.inventory, accountName, limit);
+					}
+				}else{
+					FXCraft.proxy.sendPacketToClient(new SimpleTilePacket(this, PacketType.MESSAGE, "Illegal Account Name"));
+				}
+			}else if(type == PacketType.ACCOUNT_REWARD && value instanceof NBTTagCompound){
+				NBTTagCompound tag = (NBTTagCompound) value;
+				String accountName = tag.getString("account");
+				if(loginAccount != null && !"".equals(accountName) && accountName.equals(loginAccount.name)){
+					String reward = tag.getString("reward");
+					AccountHandler.instance.tryGetReward(this, accountName, reward);
+				}else{
+					FXCraft.proxy.sendPacketToClient(new SimpleTilePacket(this, PacketType.MESSAGE, "Illegal Account Name"));
+				}
 			}
 		}else{//client
 			if(type == PacketType.ACCOUNT_CHECK && value instanceof String){
@@ -140,6 +293,7 @@ public class AccountManegerTileEntity extends TileEntity implements IGuiTile, IS
 					AccountInfo info = new AccountInfo(name);
 					info.readFromNBT(tag.getCompoundTag("info"));
 					loginAccount = info;
+					lastAccountUpdate = System.currentTimeMillis();
 					FXCraft.proxy.appendPopUp("Make : " + name);
 					FXCraft.proxy.appendPopUp("LogIn : " + name);
 					accountCheck = true;
@@ -157,19 +311,34 @@ public class AccountManegerTileEntity extends TileEntity implements IGuiTile, IS
 					AccountInfo info = new AccountInfo(name);
 					info.readFromNBT(tag.getCompoundTag("info"));
 					loginAccount = info;
+					lastAccountUpdate = System.currentTimeMillis();
 					accountCheck = true;
 					checkedAccountName = name;
 					FXCraft.proxy.appendPopUp("LogIn: " + name);
 				}else{
 					accountCheck = false;
 					checkedAccountName = name;
-					FXCraft.proxy.appendPopUp("LogIn failed : " + name);
+					FXCraft.proxy.appendPopUp("LogIn failed: " + name);
 				}
 			}else if(type == PacketType.ACCOUNT_LOGOUT && value instanceof Integer){
 				if(loginAccount != null){
-					FXCraft.proxy.appendPopUp("LogOut : " + loginAccount.name);
+					loginAccount = null;
+					lastAccountUpdate = System.currentTimeMillis();
+				}
+				FXCraft.proxy.appendPopUp("LogOut");
+			}else if(type == PacketType.ACCOUNT_UPDATE && value instanceof NBTTagCompound){
+				NBTTagCompound tag = (NBTTagCompound) value;
+				if(tag.hasKey("name")){
+					String name = tag.getString("name");
+					AccountInfo info = new AccountInfo(name);
+					info.readFromNBT(tag);
+					loginAccount = info;
+				}else{
 					loginAccount = null;
 				}
+				lastAccountUpdate = System.currentTimeMillis();
+			}else if(type == PacketType.MESSAGE && value instanceof String){
+				FXCraft.proxy.appendPopUp((String) value);
 			}
 		}
 	}

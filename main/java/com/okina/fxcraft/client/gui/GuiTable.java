@@ -77,7 +77,7 @@ public class GuiTable<T extends GuiTableRow> extends GuiButton implements ITipCo
 
 			mouseDragged(minecraft, mouseX, mouseY);
 
-			for (int row = 0; row < rowList.size(); row++){
+			for (int row = 0; row < Math.min(this.row, rowList.size()); row++){
 				GuiTableRow t = rowList.get(row);
 				for (int i = 0; i < titleRow.fieldCount; i++){
 					RenderingHelper.drawMiniString(t.getContent(i), xPosition + titleRow.rowPosition[i] + 1, yPosition + row * titleRow.sizeY + 1, 0xFFFFFFFF);

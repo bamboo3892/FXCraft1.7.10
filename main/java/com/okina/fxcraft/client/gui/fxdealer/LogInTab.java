@@ -10,6 +10,7 @@ import com.okina.fxcraft.account.AccountInfo;
 import com.okina.fxcraft.client.gui.GuiFlatButton;
 import com.okina.fxcraft.client.gui.GuiTab;
 import com.okina.fxcraft.main.FXCraft;
+import com.okina.fxcraft.rate.RateData;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -28,8 +29,8 @@ public class LogInTab extends GuiTab<FXDealerGui> {
 		int i = (gui.width - gui.getSizeX()) / 2;
 		int j = (gui.height - gui.getSizeY()) / 2;
 		list = Lists.newArrayList();
-		list.add(new GuiFlatButton(1, i + 300, j + 42, 50, 14, "LogIn"));
-		list.add(new GuiFlatButton(2, i + 25, j + 40, 50, 14, "LogOut"));
+		list.add(new GuiFlatButton(1, i + 300, j + 42, 50, 14, "LogIn", new float[] { 0.5f, 1f, 0f }));
+		list.add(new GuiFlatButton(2, i + 25, j + 40, 50, 14, "LogOut", new float[] { 0.5f, 1f, 0f }));
 		nameField = new GuiTextField(gui.getFontRenderer(), i + 203, j + 27, 91, 12);
 		nameField.setTextColor(-1);
 		nameField.setDisabledTextColour(-1);
@@ -84,16 +85,16 @@ public class LogInTab extends GuiTab<FXDealerGui> {
 			str = String.valueOf(login.totalLimitsDeal);
 			fontRenderer.drawString(str, left + 351 - fontRenderer.getStringWidth(str), up + 82, 0xffd700, false);
 
-			str = String.valueOf(login.totalGain);
+			str = String.format("%.3f", login.totalGain);
 			fontRenderer.drawString(str, left + 351 - fontRenderer.getStringWidth(str), up + 99, 0xffd700, false);
 
-			str = String.valueOf(login.totalLoss);
+			str = String.format("%.3f", login.totalLoss);
 			fontRenderer.drawString(str, left + 351 - fontRenderer.getStringWidth(str), up + 116, 0xffd700, false);
 
 			str = String.format("%.3f", login.balance);
 			fontRenderer.drawString(str, left + 351 - fontRenderer.getStringWidth(str), up + 133, 0x00ffff, false);
 
-			Map<String, Double> rateMap = FXCraft.rateGetter.getEarliestRate();
+			Map<String, RateData> rateMap = FXCraft.rateGetter.getEarliestRate();
 			str = String.format("%.3f", login.getPosiitionsValue(rateMap));
 			fontRenderer.drawString(str, left + 351 - fontRenderer.getStringWidth(str), up + 150, 0x00ffff, false);
 

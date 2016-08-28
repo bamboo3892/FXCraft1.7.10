@@ -25,24 +25,27 @@ public class DisposingTab extends GuiTab<AccountManagerGui> {
 		int i = (gui.width - gui.getSizeX()) / 2;
 		int j = (gui.height - gui.getSizeY()) / 2;
 		list = Lists.newArrayList();
-		list.add(new GuiFlatButton(1, i + 50, j + 88, 80, 14, "Dispose"));
+		list.add(new GuiFlatButton(1, i + 50, j + 88, 80, 14, "Dispose", new float[] { 0.5f, 1f, 0f }));
 		list.add(slider = new GuiSlider(3, i + 18, j + 73, 50, 1, 64, 1, 1));
 		list.add(new GuiIconLabel(i + 72, j + 62, 32, 16, 16, 0, Lists.newArrayList("1 Emerald = 10000")));
 	}
 
 	@Override
 	public void actionPerformed(GuiButton guiButton) {
-		//TODO
+		int id = guiButton.id;
+		if(id == 1){
+			gui.tile.tryDispose(gui.player, slider.getValue());
+		}
 	}
 
 	@Override
 	public void drawComponent(Minecraft minecraft, int mouseX, int mouseY) {
-		AccountInfo account = gui.tile.getLogInAccount();
+		AccountInfo account = gui.tile.getAccountInfo();
 		int i = (gui.width - gui.getSizeX()) / 2;
 		int j = (gui.height - gui.getSizeY()) / 2;
 		FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
 		if(account != null){
-			fontRenderer.drawString("Your Balance : " + account.balance, i, j + 43, 0xffffff, false);
+			fontRenderer.drawString("Your Balance : " + String.format("%.3f", account.balance), i, j + 43, 0xffffff, false);
 		}else{
 			fontRenderer.drawString("Not Logged In", i, j + 43, 0xffffff, false);
 		}

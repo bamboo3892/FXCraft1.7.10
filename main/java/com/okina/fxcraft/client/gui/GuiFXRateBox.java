@@ -78,23 +78,28 @@ public class GuiFXRateBox extends GuiButton {
 
 			fontrenderer.drawString("Rate", xPosition + 2, yPosition + 17, 0xFFFFFF, false);
 			if(FXCraft.rateGetter.hasUpdate(updateMills)){
-				double nowRate;
+				RateData nowRate;
 				try{
 					nowRate = FXCraft.rateGetter.getEarliestRate(displayString);
 				}catch (NoValidRateException e){
-					nowRate = 0;
+					nowRate = null;
 				}
-				if(nowRate == lastRenderedRate){
+				if(nowRate == null){
 					lastRenderedColor = 0xFFFFFF;
-				}else if(nowRate < lastRenderedRate){
-					lastRenderedColor = 0xff4500;
+					lastRenderedRate = 0;
 				}else{
-					lastRenderedColor = 0x00ffff;
+					if(nowRate.open == lastRenderedRate){
+						lastRenderedColor = 0xFFFFFF;
+					}else if(nowRate.open < lastRenderedRate){
+						lastRenderedColor = 0xff4500;
+					}else{
+						lastRenderedColor = 0x00ffff;
+					}
+					lastRenderedRate = nowRate.open;
 				}
-				lastRenderedRate = nowRate;
 				updateMills = System.currentTimeMillis();
 			}
-			String str = lastRenderedRate + "";
+			String str = lastRenderedRate == 0 ? "---" : lastRenderedRate + "";
 			fontrenderer.drawString(str, xPosition + width - fontrenderer.getStringWidth(str) - 2, yPosition + 17, lastRenderedColor, false);
 
 			RateData today = FXCraft.rateGetter.getTodaysOpen(displayString);

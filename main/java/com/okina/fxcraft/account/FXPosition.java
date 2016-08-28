@@ -35,7 +35,7 @@ public class FXPosition implements Cloneable {
 		positionID = UUID.randomUUID().toString();
 	}
 
-	public FXPosition(Calendar date, String pair, int lot, int deposit, double rate, boolean askOrBid) {
+	public FXPosition(Calendar date, String pair, double lot, double deposit, double rate, boolean askOrBid) {
 		this();
 		this.contractDate = date;
 		this.currencyPair = pair;
@@ -43,6 +43,10 @@ public class FXPosition implements Cloneable {
 		this.depositLot = deposit;
 		this.contractRate = rate;
 		this.askOrBid = askOrBid;
+	}
+
+	public FXPosition(Calendar date, double rate, GetPositionOrder order) {
+		this(date, order.currencyPair, order.lot, order.depositLot, rate, order.askOrBid);
 	}
 
 	public String getField(int field) {
@@ -75,7 +79,7 @@ public class FXPosition implements Cloneable {
 
 	public double getGain(double nowRate) {
 		if(nowRate <= 0) return 0;
-		return lot * (contractRate - nowRate) / nowRate * (askOrBid ? 1 : -1);
+		return lot * (nowRate - contractRate) / nowRate * (askOrBid ? 1 : -1);
 	}
 
 	public double getValue(double nowRate) {
@@ -83,7 +87,7 @@ public class FXPosition implements Cloneable {
 		return depositLot + getGain(nowRate);
 	}
 
-	public FXPosition split(int dealLot) {
+	public FXPosition split(double dealLot) {
 		if(lot < dealLot) throw new IllegalArgumentException();
 		double ratio = (double) dealLot / lot;
 

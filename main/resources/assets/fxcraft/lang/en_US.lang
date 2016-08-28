@@ -4,6 +4,22 @@ tile.fxcraft_account_manager.name=Account Maneger
 tile.fxcraft_fx_dealer.name=FX Dealer
 
 item.fxcraft_iphone.name=iPhone
+item.fxcraft_limit_dealLot_1.name=License (Lot Lv.1)
+item.fxcraft_limit_dealLot_2.name=License (Lot Lv.2)
+item.fxcraft_limit_dealLot_3.name=License (Lot Lv.3)
+item.fxcraft_limit_dealLot_4.name=License (Lot Lv.4)
+item.fxcraft_limit_dealLot_5.name=License (Lot Lv.5)
+item.fxcraft_limit_leverage_1.name=License (Leverage Lv.1)
+item.fxcraft_limit_leverage_2.name=License (Leverage Lv.2)
+item.fxcraft_limit_leverage_3.name=License (Leverage Lv.3)
+item.fxcraft_limit_leverage_4.name=License (Leverage Lv.4)
+item.fxcraft_limit_leverage_5.name=License (Leverage Lv.5)
+item.fxcraft_limit_position_1.name=License (Position Lv.1)
+item.fxcraft_limit_position_2.name=License (Position Lv.2)
+item.fxcraft_limit_position_3.name=License (Position Lv.3)
+item.fxcraft_limit_position_4.name=License (Position Lv.4)
+item.fxcraft_limit_position_5.name=License (Position Lv.5)
+item.fxcraft_limit_limits_trade.name=License (Limits Trade)
 
 tooltipshift.tile.mbm_storage.0=Grade Benefit
 
