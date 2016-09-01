@@ -170,6 +170,26 @@ public class AccountHandler {
 		return false;
 	}
 
+	public boolean addBalance(String name, double lot) {
+		Account account = getAccount(name);
+		if(account != null){
+			account.balance += lot;
+			AccountUpdateHandler.instance.notifyAccountUpdate(account);
+			return true;
+		}
+		return false;
+	}
+
+	public boolean decBalance(String name, double lot) {
+		Account account = getAccount(name);
+		if(account != null && account.balance >= lot){
+			account.balance -= lot;
+			AccountUpdateHandler.instance.notifyAccountUpdate(account);
+			return true;
+		}
+		return false;
+	}
+
 	/**Return result {accountName, emerald}*/
 	public void tryDispose(final IFXDealer dealer, final IInventory inv, final String accountName, final int emerald) {
 		exec.submit(new Runnable() {

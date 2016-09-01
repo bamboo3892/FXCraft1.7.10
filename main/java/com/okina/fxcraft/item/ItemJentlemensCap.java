@@ -1,5 +1,8 @@
 package com.okina.fxcraft.item;
 
+import java.util.List;
+
+import com.okina.fxcraft.client.IToolTipUser;
 import com.okina.fxcraft.client.model.ModelJentleArmor;
 import com.okina.fxcraft.main.ClientProxy;
 import com.okina.fxcraft.main.FXCraft;
@@ -13,15 +16,26 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
+import net.minecraft.potion.Potion;
+import net.minecraft.world.World;
 
-public class ItemJentlemensCap extends ItemArmor {
+public class ItemJentlemensCap extends ItemArmor implements IToolTipUser {
 
-	public ItemJentlemensCap(ArmorMaterial meterial, int renderId, int type) {
-		super(meterial, renderId, type);
+	public ItemJentlemensCap(ArmorMaterial material, int renderId) {
+		super(material, renderId, 0);
 		setMaxStackSize(1);
 		setCreativeTab(FXCraft.FXCraftCreativeTab);
 		setTextureName(FXCraft.MODID + ":jentlemens_cap");
 		setUnlocalizedName("fxcraft_jentlemens_cap");
+	}
+
+	@Override
+	public void onArmorTick(World world, EntityPlayer player, ItemStack itemStack) {
+		if(!world.isRemote){
+			if(player.isPotionActive(Potion.poison.id)){
+				player.removePotionEffect(Potion.poison.id);
+			}
+		}
 	}
 
 	@Override
@@ -63,7 +77,22 @@ public class ItemJentlemensCap extends ItemArmor {
 
 	@Override
 	public String getArmorTexture(ItemStack stack, Entity entity, int slot, String layer) {
-		return String.format(FXCraft.MODID + ":textures/models/armor/jentlemens_armor.png");
+		return FXCraft.MODID + ":textures/models/armor/jentlemens_armor.png";
+	}
+
+	@Override
+	public void addToolTip(List<String> toolTip, ItemStack itemStack, EntityPlayer player, boolean shiftPressed, boolean advancedToolTip) {
+		toolTip.add("Cure Poison");
+	}
+
+	@Override
+	public int getNeutralLines() {
+		return 0;
+	}
+
+	@Override
+	public int getShiftLines() {
+		return 0;
 	}
 
 }

@@ -7,6 +7,7 @@ import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.client.Minecraft;
 
 public class CommandPacket implements IMessage {
 
@@ -44,7 +45,7 @@ public class CommandPacket implements IMessage {
 
 	@Override
 	public String toString() {
-		return "Command Packet : /mbm " + command + " " + value;
+		return "Command Packet : /fxcraft " + command + " " + value;
 	}
 
 	/**client only*/
@@ -54,11 +55,24 @@ public class CommandPacket implements IMessage {
 			try{
 				if("message".equals(msg.command)){
 					FXCraft.proxy.appendPopUp(msg.value);
+				}else if("gun".equals(msg.command)){
+					String[] str = msg.value.split(",");
+					try{
+						double x = Double.valueOf(str[0]);
+						double y = Double.valueOf(str[1]);
+						double z = Double.valueOf(str[2]);
+						for (int i = 0; i < 5; i++){
+							Minecraft.getMinecraft().theWorld.spawnParticle("happyVillager", x + Math.random() * 0.2, y + Math.random() * 0.2, z + Math.random() * 0.2, 0, 0, 0);
+						}
+					}catch (Exception e){
+						e.printStackTrace();
+					}
 				}
 			}catch (Exception e){
 			}
 			return null;
 		}
+
 	}
 
 }

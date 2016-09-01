@@ -6,10 +6,10 @@ import net.minecraft.entity.Entity;
 
 public class ModelJentleArmor extends ModelBiped {
 
-	public boolean leg = false;
-	ModelRenderer legShape;
+	private boolean isLeg = false;
+	private ModelRenderer legShape;
 
-	public ModelJentleArmor() {
+	public ModelJentleArmor(boolean isLeg) {
 		textureWidth = 64;
 		textureHeight = 32;
 
@@ -19,12 +19,13 @@ public class ModelJentleArmor extends ModelBiped {
 		legShape.setTextureSize(64, 32);
 		legShape.mirror = true;
 		setRotation(legShape, 0F, 0F, 0F);
+		this.isLeg = isLeg;
 	}
 
 	public void render(Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
 		super.render(entity, f, f1, f2, f3, f4, f5);
 		setRotationAngles(f, f1, f2, f3, f4, f5, entity);
-		if(leg) legShape.render(f5);
+		if(isLeg) legShape.render(f5);
 	}
 
 	private void setRotation(ModelRenderer model, float x, float y, float z) {

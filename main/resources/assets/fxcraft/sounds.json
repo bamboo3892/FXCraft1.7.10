@@ -1,13 +1,22 @@
 {
-  "clockpulser":{
-    "category":"block",
-    "sounds":[
+  "clockpulser": {
+    "category": "master",
+    "sounds": [
       {
         "name": "clockpulser",
         "weight": 1,
         "volume": 1,
-        "pitch":1,
-        "stream":false
+        "pitch": 1,
+        "stream": false
+      }
+    ]
+  },
+  "gun": {
+    "category": "master",
+    "sounds": [
+      {
+        "name": "gun",
+        "stream": false
       }
     ]
   }

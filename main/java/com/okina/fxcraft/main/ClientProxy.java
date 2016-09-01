@@ -6,10 +6,12 @@ import java.io.File;
 import java.util.Comparator;
 
 import com.okina.fxcraft.client.model.ModelJentleArmor;
+import com.okina.fxcraft.client.particle.ParticleGun;
 import com.okina.fxcraft.client.renderer.BlockAccountManagerRenderer;
 import com.okina.fxcraft.network.SimpleTilePacket;
 
 import cpw.mods.fml.client.registry.RenderingRegistry;
+import net.minecraft.client.Minecraft;
 import net.minecraft.world.World;
 
 public class ClientProxy extends CommonProxy {
@@ -25,9 +27,32 @@ public class ClientProxy extends CommonProxy {
 	@Override
 	protected void registerRenderer() {
 		RenderingRegistry.registerBlockHandler(new BlockAccountManagerRenderer());
-		modelJentlemensCap = new ModelJentleArmor();
-		modelJentlemensPanz = new ModelJentleArmor();
-		modelJentlemensPanz.leg = true;
+		modelJentlemensCap = new ModelJentleArmor(false);
+		modelJentlemensPanz = new ModelJentleArmor(true);
+
+		//		String libname;
+		//		String[] library_names;
+		//		switch (LWJGLUtil.getPlatform()) {
+		//		case LWJGLUtil.PLATFORM_WINDOWS:
+		//			libname = "OpenAL32";
+		//			library_names = new String[] { "OpenAL64.dll", "OpenAL32.dll" };
+		//			break;
+		//		case LWJGLUtil.PLATFORM_LINUX:
+		//			libname = "openal";
+		//			library_names = new String[] { "libopenal64.so", "libopenal.so", "libopenal.so.0" };
+		//			break;
+		//		case LWJGLUtil.PLATFORM_MACOSX:
+		//			libname = "openal";
+		//			library_names = new String[] { "openal.dylib" };
+		//			break;
+		//		default:
+		//			return;
+		//		}
+		//		String[] oalPaths = LWJGLUtil.getLibraryPaths(libname, library_names, AL.class.getClassLoader());
+		//		LWJGLUtil.log("Found " + oalPaths.length + " OpenAL paths");
+		//		for (String oalPath : oalPaths){
+		//			System.out.println(oalPath);
+		//		}
 	}
 
 	@Override
@@ -35,80 +60,20 @@ public class ClientProxy extends CommonProxy {
 		packetDispatcher.sendToServer(packet);
 	}
 
-	//file io//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	@Override
-	protected void updatePropertyFile() {
-		//		new Thread(new Runnable() {
-		//			@Override
-		//			public void run() {
-		//				PrintWriter writer = null;
-		//				try{
-		//					Gson gson = new Gson();
-		//					File file = new File(ConfigFile.getAbsolutePath() + File.separator + MODID + ".properties");
-		//					writer = new PrintWriter(new FileWriter(file));
-		//					String json = gson.toJson(effectProperties);
-		//					//					json.replaceAll("~", "");
-		//					//					json.replaceAll("{", "~\n");
-		//					//					json.replaceAll("~", "{");
-		//					//					json.replaceAll("}", "~\n");
-		//					//					json.replaceAll("~", "}");
-		//					//					json.replaceAll(",", "~\n");
-		//					//					json.replaceAll("~", ",");
-		//					writer.print(json);
-		//				}catch (Exception e){
-		//					e.printStackTrace();
-		//				}finally{
-		//					if(writer != null) writer.close();
-		//				}
-		//			}
-		//		}, "Update Property Thread").start();
-	}
-
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	@Override
-	protected void spawnParticle(World world, int id, Object... objects) {
-		//		try{
-		//			switch (id) {
-		//			case TestCore.PARTICLE_GROWER:
-		//				Minecraft.getMinecraft().effectRenderer.addEffect(new ParticleGrower(world, objects));
-		//				break;
-		//			case TestCore.PARTICLE_ENERGY:
-		//				Minecraft.getMinecraft().effectRenderer.addEffect(new ParticleEnergyProvide(world, objects).set1());
-		//				break;
-		//			case TestCore.PARTICLE_BEZIER:
-		//				Minecraft.getMinecraft().effectRenderer.addEffect(new ParticleBezierCurve(world, objects));
-		//				break;
-		//			case TestCore.PARTICLE_BEZIER_DOTS:
-		//				Minecraft.getMinecraft().effectRenderer.addEffect(new ParticleBezierDots(world, objects));
-		//				break;
-		//			case TestCore.PARTICLE_DOT:
-		//				Minecraft.getMinecraft().effectRenderer.addEffect(new ParticleDot(world, objects));
-		//				break;
-		//			case TestCore.PARTICLE_CRUCK:
-		//				Minecraft.getMinecraft().effectRenderer.addEffect(new ParticleCruck(world, objects));
-		//				break;
-		//			case TestCore.PARTICLE_BEZIER_DOT:
-		//				Minecraft.getMinecraft().effectRenderer.addEffect(new ParticleBezierDot(world, objects));
-		//				break;
-		//			case TestCore.PARTICLE_FLAME:
-		//				Minecraft.getMinecraft().effectRenderer.addEffect(new ParticleDirectionalFlame(world, objects));
-		//				break;
-		//			case TestCore.PARTICLE_CUSTOM_ICON:
-		//				Minecraft.getMinecraft().effectRenderer.addEffect(new ParticleCustomIcon(world, objects));
-		//				break;
-		//			case TestCore.PARTICLE_ALTER:
-		//				Minecraft.getMinecraft().effectRenderer.addEffect(new ParticleAlter(world, objects));
-		//				break;
-		//			case TestCore.PARTICLE_ALTER_DOT:
-		//				Minecraft.getMinecraft().effectRenderer.addEffect(new ParticleAlterDot(world, objects));
-		//				break;
-		//			}
-		//		}catch (Exception e){
-		//			System.err.println("Illegal parameter");
-		//			e.printStackTrace();
-		//		}
+	public void spawnParticle(World world, int id, double x, double y, double z, double vecX, double vecY, double vecZ) {
+		try{
+			switch (id) {
+			case PARTICLE_GUN:
+				Minecraft.getMinecraft().effectRenderer.addEffect(new ParticleGun(world, x, y, z, vecX, vecY, vecZ));
+				break;
+			}
+		}catch (Exception e){
+			System.err.println("Illegal parameter");
+			e.printStackTrace();
+		}
 	}
 
 	private static final Comparator comparator = new Comparator() {

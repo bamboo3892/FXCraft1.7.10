@@ -94,7 +94,7 @@ public abstract class Reward {
 						if(index != GAIN.length - 1){
 							return TOTAL_GAIN[index + 1];
 						}else{
-							return null;
+							return MAX_LEVERAGE;
 						}
 					}
 				};
@@ -118,14 +118,14 @@ public abstract class Reward {
 						if(index != LOSS.length - 1){
 							return TOTAL_LOSS[index + 1];
 						}else{
-							return null;
+							return FIRST_LOSSCUT;
 						}
 					}
 				};
 			}
 		}
 
-		public static final Reward MAX_LOT = new Reward("max_lot", "Big Dealer", new ItemStack(Items.emerald, 5), "Deal " + AccountInfo.DEAL_LIMIT[AccountInfo.DEAL_LIMIT.length - 1] + " Lot Position") {
+		public static final Reward MAX_LOT = new Reward("max_lot", "Big Dealer", new ItemStack(FXCraft.jentlemens_cap), "Deal " + AccountInfo.DEAL_LIMIT[AccountInfo.DEAL_LIMIT.length - 1] + " Lot Position") {
 			@Override
 			public boolean canGetReward(AccountInfo account) {
 				for (FXDealHistory history : account.history){
@@ -135,15 +135,29 @@ public abstract class Reward {
 			}
 			@Override
 			public Reward getNextStepReward() {
-				return MAX_LEVERAGE;
+				return MAX_LOT_LEVERAGE;
 			}
 		};
 
-		public static final Reward MAX_LEVERAGE = new Reward("max_leverage", "Big Dealer2", new ItemStack(Items.emerald, 5), "Deal by leverage " + AccountInfo.LEVERAGE_LIMIT[AccountInfo.LEVERAGE_LIMIT.length - 1]) {
+		public static final Reward MAX_LEVERAGE = new Reward("max_leverage", "Big Dealer2", new ItemStack(FXCraft.jentlemens_panz), "Deal by leverage " + AccountInfo.LEVERAGE_LIMIT[AccountInfo.LEVERAGE_LIMIT.length - 1]) {
 			@Override
 			public boolean canGetReward(AccountInfo account) {
 				for (FXDealHistory history : account.history){
 					if(history.lot / history.deposit == AccountInfo.LEVERAGE_LIMIT[AccountInfo.LEVERAGE_LIMIT.length - 1]) return true;
+				}
+				return false;
+			}
+			@Override
+			public Reward getNextStepReward() {
+				return MAX_LOT_LEVERAGE;
+			}
+		};
+
+		public static final Reward MAX_LOT_LEVERAGE = new Reward("max_lot_leverage", "Big Dealer3", new ItemStack(FXCraft.capitalist_guard), "Deal " + AccountInfo.DEAL_LIMIT[AccountInfo.DEAL_LIMIT.length - 1] + " by leverage " + AccountInfo.LEVERAGE_LIMIT[AccountInfo.LEVERAGE_LIMIT.length - 1]) {
+			@Override
+			public boolean canGetReward(AccountInfo account) {
+				for (FXDealHistory history : account.history){
+					if(history.lot >= AccountInfo.DEAL_LIMIT[AccountInfo.DEAL_LIMIT.length - 1] && history.lot / history.deposit == AccountInfo.LEVERAGE_LIMIT[AccountInfo.LEVERAGE_LIMIT.length - 1]) return true;
 				}
 				return false;
 			}
@@ -163,7 +177,17 @@ public abstract class Reward {
 			}
 		};
 
-		public static final Reward FIRST_LIMITS_DEAL = new Reward("first_limits_deal", "Tricky Trade", new ItemStack(Items.emerald, 5), "First Limits Trade") {
+		public static final Reward FIRST_LEVERAGE_DEAL = new Reward("first_leverage_deal", "High Risk High Return", new ItemStack(Items.emerald, 5), "First Leverage Trade") {
+			@Override
+			public boolean canGetReward(AccountInfo account) {
+				for (FXDealHistory history : account.history){
+					if(history.lot > history.deposit) return true;
+				}
+				return false;
+			}
+		};
+
+		public static final Reward FIRST_LIMITS_DEAL = new Reward("first_limits_deal", "Tricky Trade", new ItemStack(FXCraft.capitalist_gun), "First Limits Trade") {
 			@Override
 			public boolean canGetReward(AccountInfo account) {
 				for (FXDealHistory history : account.history){

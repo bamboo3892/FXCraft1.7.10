@@ -5,7 +5,9 @@ import static com.okina.fxcraft.main.FXCraft.*;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
-import com.okina.fxcraft.client.IHUDUser;
+import com.okina.fxcraft.client.IHUDArmor;
+import com.okina.fxcraft.client.IHUDBlock;
+import com.okina.fxcraft.client.IHUDItem;
 import com.okina.fxcraft.client.IToolTipUser;
 import com.okina.fxcraft.main.CommonProxy.PopUpMessage;
 import com.okina.fxcraft.utils.UtilMethods;
@@ -23,6 +25,7 @@ import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 import net.minecraft.util.StatCollector;
@@ -107,9 +110,13 @@ public class EventHandler {
 	@SubscribeEvent
 	public void onPlayerTick(TickEvent.PlayerTickEvent event) {}
 
-	private IHUDUser pastRenderedObject = null;
+	private ItemStack[] pastRenderedArmor = new ItemStack[4];
+	private double[] renderTicksArmor = new double[4];
+	private ItemStack pastRenderedItem = null;
+	private double renderTicksItem = 0;
+	private IHUDBlock pastRenderedObject = null;
 	private MovingObjectPosition pastMOP = null;
-	private double renderStartTicks = 0;
+	private double renderTicksBlock = 0;
 
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
@@ -120,30 +127,57 @@ public class EventHandler {
 
 			//hud
 			if(mc.currentScreen == null){
-				IHUDUser renderObj = null;
-				MovingObjectPosition mop = UtilMethods.getMovingObjectPositionFromPlayer(mc.theWorld, mc.thePlayer, true);
-				if(mc.thePlayer.getCurrentEquippedItem() != null && mc.thePlayer.getCurrentEquippedItem().getItem() instanceof IHUDUser){
-					renderObj = (IHUDUser) mc.thePlayer.getCurrentEquippedItem().getItem();
-				}else{
-					if(mop != null && mop.sideHit != -1 && mop.typeOfHit == MovingObjectType.BLOCK){
-						if(mc.theWorld.getTileEntity(mop.blockX, mop.blockY, mop.blockZ) instanceof IHUDUser){
-							renderObj = (IHUDUser) mc.theWorld.getTileEntity(mop.blockX, mop.blockY, mop.blockZ);
-						}else if(mc.theWorld.getBlock(mop.blockX, mop.blockY, mop.blockZ) instanceof IHUDUser){
-							renderObj = (IHUDUser) mc.theWorld.getBlock(mop.blockX, mop.blockY, mop.blockZ);
+				for (int i = 0; i < 4; i++){
+					ItemStack armor = Minecraft.getMinecraft().thePlayer.getCurrentArmor(i);
+					if(armor != null && armor.getItem() instanceof IHUDArmor){
+						IHUDArmor hud = (IHUDArmor) armor.getItem();
+						if(pastRenderedArmor[i] != null && hud.comparePastRenderObj(pastRenderedArmor[i])){
+							double tick = mc.theWorld.getTotalWorldTime() % 72000 + event.renderTickTime;
+							hud.renderHUD(mc, tick - renderTicksArmor[i], armor);
+						}else{
+							hud.renderHUD(mc, 0.0D, armor);
+							pastRenderedArmor[i] = armor;
+							renderTicksArmor[i] = mc.theWorld.getTotalWorldTime() % 72000 + event.renderTickTime;
 						}
+					}else{
+						pastRenderedArmor[i] = null;
 					}
 				}
-				if(renderObj != null){
-					if(renderObj.comparePastRenderObj(pastRenderedObject, pastMOP, mop)){
+				ItemStack current = mc.thePlayer.getCurrentEquippedItem();
+				if(current != null && current.getItem() instanceof IHUDItem){
+					IHUDItem hud = (IHUDItem) current.getItem();
+					if(pastRenderedItem != null && hud.comparePastRenderObj(pastRenderedItem)){
 						double tick = mc.theWorld.getTotalWorldTime() % 72000 + event.renderTickTime;
-						renderObj.renderHUD(mc, tick - renderStartTicks, mop);
-						return;
+						hud.renderHUD(mc, tick - renderTicksItem, current);
 					}else{
-						renderObj.renderHUD(mc, 0.0D, mop);
-						pastRenderedObject = renderObj;
-						pastMOP = mop;
-						renderStartTicks = mc.theWorld.getTotalWorldTime() % 72000 + event.renderTickTime;
-						return;
+						hud.renderHUD(mc, 0.0D, current);
+						pastRenderedItem = current;
+						renderTicksItem = mc.theWorld.getTotalWorldTime() % 72000 + event.renderTickTime;
+					}
+				}else{
+					pastRenderedItem = null;
+				}
+				MovingObjectPosition mop = UtilMethods.getMovingObjectPositionFromPlayer(mc.theWorld, mc.thePlayer, true);
+				if(mop != null && mop.sideHit != -1 && mop.typeOfHit == MovingObjectType.BLOCK){
+					IHUDBlock renderObj = null;
+					if(mc.theWorld.getTileEntity(mop.blockX, mop.blockY, mop.blockZ) instanceof IHUDBlock){
+						renderObj = (IHUDBlock) mc.theWorld.getTileEntity(mop.blockX, mop.blockY, mop.blockZ);
+					}else if(mc.theWorld.getBlock(mop.blockX, mop.blockY, mop.blockZ) instanceof IHUDBlock){
+						renderObj = (IHUDBlock) mc.theWorld.getBlock(mop.blockX, mop.blockY, mop.blockZ);
+					}
+					if(renderObj != null){
+						if(renderObj.comparePastRenderObj(pastRenderedObject, pastMOP, mop)){
+							double tick = mc.theWorld.getTotalWorldTime() % 72000 + event.renderTickTime;
+							renderObj.renderHUD(mc, tick - renderTicksBlock, mop);
+						}else{
+							renderObj.renderHUD(mc, 0.0D, mop);
+							pastRenderedObject = renderObj;
+							pastMOP = mop;
+							renderTicksBlock = mc.theWorld.getTotalWorldTime() % 72000 + event.renderTickTime;
+						}
+					}else{
+						pastRenderedObject = null;
+						pastMOP = null;
 					}
 				}
 			}

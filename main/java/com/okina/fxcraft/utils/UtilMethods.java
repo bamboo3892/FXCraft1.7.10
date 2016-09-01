@@ -1,10 +1,6 @@
 package com.okina.fxcraft.utils;
 
 import java.util.HashMap;
-import java.util.List;
-
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.util.Point;
 
 import com.google.common.collect.Maps;
 import com.okina.fxcraft.account.AccountInfo;
@@ -14,10 +10,10 @@ import com.okina.fxcraft.account.SettlePositionOrder;
 import com.okina.fxcraft.rate.FXRateGetHelper;
 import com.okina.fxcraft.rate.RateData;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
@@ -30,22 +26,59 @@ public class UtilMethods {
 		float f = 1.0F;
 		float f1 = player.prevRotationPitch + (player.rotationPitch - player.prevRotationPitch) * f;
 		float f2 = player.prevRotationYaw + (player.rotationYaw - player.prevRotationYaw) * f;
-		double d0 = player.prevPosX + (player.posX - player.prevPosX) * f;
-		double d1 = player.prevPosY + (player.posY - player.prevPosY) * f + (world.isRemote ? player.getEyeHeight() - player.getDefaultEyeHeight() : player.getEyeHeight()); // isRemote check to revert changes to ray trace position due to adding the eye height clientside and player yOffset differences
-		double d2 = player.prevPosZ + (player.posZ - player.prevPosZ) * f;
-		Vec3 vec3 = Vec3.createVectorHelper(d0, d1, d2);
+		double entityPosX = player.prevPosX + (player.posX - player.prevPosX) * f;
+		double entityPosY = player.prevPosY + (player.posY - player.prevPosY) * f + (world.isRemote ? player.getEyeHeight() - player.getDefaultEyeHeight() : player.getEyeHeight()); // isRemote check to revert changes to ray trace position due to adding the eye height clientside and player yOffset differences
+		double entityPosZ = player.prevPosZ + (player.posZ - player.prevPosZ) * f;
+		Vec3 entityPos = Vec3.createVectorHelper(entityPosX, entityPosY, entityPosZ);
 		float f3 = MathHelper.cos(-f2 * 0.017453292F - (float) Math.PI);
 		float f4 = MathHelper.sin(-f2 * 0.017453292F - (float) Math.PI);
 		float f5 = -MathHelper.cos(-f1 * 0.017453292F);
 		float f6 = MathHelper.sin(-f1 * 0.017453292F);
 		float f7 = f4 * f5;
 		float f8 = f3 * f5;
-		double d3 = 5.0D;
+		double radius = 5.0D;
 		if(player instanceof EntityPlayerMP){
-			d3 = ((EntityPlayerMP) player).theItemInWorldManager.getBlockReachDistance();
+			radius = ((EntityPlayerMP) player).theItemInWorldManager.getBlockReachDistance();
 		}
-		Vec3 vec31 = vec3.addVector(f7 * d3, f6 * d3, f8 * d3);
-		return world.func_147447_a(vec3, vec31, pTrue, !pTrue, false);
+		Vec3 endPos = entityPos.addVector(f7 * radius, f6 * radius, f8 * radius);
+		return world.func_147447_a(entityPos, endPos, pTrue, !pTrue, false);
+	}
+
+	public static Entity getCollidedEntityFromEntity(World world, EntityPlayer player, double radius) {
+		float f = 1.0F;
+		float f1 = player.prevRotationPitch + (player.rotationPitch - player.prevRotationPitch) * f;
+		float f2 = player.prevRotationYaw + (player.rotationYaw - player.prevRotationYaw) * f;
+		double entityPosX = player.prevPosX + (player.posX - player.prevPosX) * f;
+		double entityPosY = player.prevPosY + (player.posY - player.prevPosY) * f + (world.isRemote ? player.getEyeHeight() - player.getDefaultEyeHeight() : player.getEyeHeight()); // isRemote check to revert changes to ray trace position due to adding the eye height clientside and player yOffset differences
+		double entityPosZ = player.prevPosZ + (player.posZ - player.prevPosZ) * f;
+		Vec3 startPos = Vec3.createVectorHelper(entityPosX, entityPosY, entityPosZ);
+		float f3 = MathHelper.cos(-f2 * 0.017453292F - (float) Math.PI);
+		float f4 = MathHelper.sin(-f2 * 0.017453292F - (float) Math.PI);
+		float f5 = -MathHelper.cos(-f1 * 0.017453292F);
+		float f6 = MathHelper.sin(-f1 * 0.017453292F);
+		float f7 = f4 * f5;
+		float f8 = f3 * f5;
+		Vec3 endPos = startPos.addVector(f7 * radius, f6 * radius, f8 * radius);
+		Vec3 vec = startPos.subtract(endPos);
+
+		float gap = 0.05f;
+		int count = (int) (radius / gap);
+		for (int i = 0; i < count; i++){
+			float dist = i * gap;
+			Vec3 point = startPos.addVector(vec.xCoord * dist, vec.yCoord * dist, vec.zCoord * dist);
+			for (int j = 0; j < world.loadedEntityList.size(); j++){
+				Entity e = (Entity) world.loadedEntityList.get(j);
+				if(e != player && isEntiyOnPoint(e, point)){
+					return e;
+				}
+			}
+		}
+		return null;
+	}
+
+	public static boolean isEntiyOnPoint(Entity entity, Vec3 point) {
+		AxisAlignedBB box = entity.boundingBox;
+		return box.minX < point.xCoord && box.maxX > point.xCoord && box.minY < point.yCoord && box.maxY > point.yCoord && box.minZ < point.zCoord && box.maxZ > point.zCoord;
 	}
 
 	public static int[] getRandomArray(int min, int max) {
@@ -88,46 +121,6 @@ public class UtilMethods {
 			}
 			builder.append(str);
 			return builder.toString();
-		}
-	}
-
-	public static void renderHUDCenter(Minecraft mc, List<ColoredString> list) {
-		if(list != null && !list.isEmpty()){
-			ScaledResolution sr = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
-			Point center = new Point(sr.getScaledWidth() / 2, sr.getScaledHeight() / 2);
-			int size = list.size();
-			for (int i = 0; i < list.size(); i++){
-				ColoredString str = list.get(i);
-				if(str != null && !str.isEmpty()){
-					int length = mc.fontRenderer.getStringWidth(str.str);
-					GL11.glPushMatrix();
-					GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-					GL11.glTranslatef(center.getX(), center.getY(), 0);
-					GL11.glTranslatef(-length / 2, 20 + i * 10, 0);
-					mc.fontRenderer.drawString(str.str, 0, 0, str.color, true);
-					GL11.glPopMatrix();
-				}
-			}
-		}
-	}
-
-	public static void renderHUDRight(Minecraft mc, List<ColoredString> list) {
-		if(list != null && !list.isEmpty()){
-			ScaledResolution sr = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
-			Point right = new Point(sr.getScaledWidth(), sr.getScaledHeight() / 2);
-			int size = list.size();
-			for (int i = 0; i < list.size(); i++){
-				ColoredString str = list.get(i);
-				if(str != null && !str.isEmpty()){
-					int length = mc.fontRenderer.getStringWidth(str.str);
-					GL11.glPushMatrix();
-					GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-					GL11.glTranslatef(right.getX(), right.getY(), 0);
-					GL11.glTranslatef(-length - 5, -size * 10 / 2 + i * 10, 0);
-					mc.fontRenderer.drawString(str.str, 0, 0, str.color, true);
-					GL11.glPopMatrix();
-				}
-			}
 		}
 	}
 

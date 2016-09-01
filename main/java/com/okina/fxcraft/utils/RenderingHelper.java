@@ -1,11 +1,15 @@
 package com.okina.fxcraft.utils;
 
+import java.util.List;
+
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.Point;
 
 import com.okina.fxcraft.main.FXCraft;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.RenderHelper;
@@ -479,6 +483,46 @@ public final class RenderingHelper {
 				tessellator.addVertexWithUV(maxX, maxY, minZ, maxY, minZ);
 				tessellator.addVertexWithUV(maxX, maxY, maxZ, maxY, maxZ);
 				tessellator.addVertexWithUV(maxX, minY, maxZ, minY, maxZ);
+			}
+		}
+	}
+
+	public static void renderHUDCenter(Minecraft mc, List<ColoredString> list) {
+		if(list != null && !list.isEmpty()){
+			ScaledResolution sr = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
+			Point center = new Point(sr.getScaledWidth() / 2, sr.getScaledHeight() / 2);
+			int size = list.size();
+			for (int i = 0; i < list.size(); i++){
+				ColoredString str = list.get(i);
+				if(str != null && !str.isEmpty()){
+					int length = mc.fontRenderer.getStringWidth(str.str);
+					GL11.glPushMatrix();
+					GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+					GL11.glTranslatef(center.getX(), center.getY(), 0);
+					GL11.glTranslatef(-length / 2, 20 + i * 10, 0);
+					mc.fontRenderer.drawString(str.str, 0, 0, str.color, true);
+					GL11.glPopMatrix();
+				}
+			}
+		}
+	}
+
+	public static void renderHUDRight(Minecraft mc, List<ColoredString> list) {
+		if(list != null && !list.isEmpty()){
+			ScaledResolution sr = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
+			Point right = new Point(sr.getScaledWidth(), sr.getScaledHeight() / 2);
+			int size = list.size();
+			for (int i = 0; i < list.size(); i++){
+				ColoredString str = list.get(i);
+				if(str != null && !str.isEmpty()){
+					int length = mc.fontRenderer.getStringWidth(str.str);
+					GL11.glPushMatrix();
+					GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+					GL11.glTranslatef(right.getX(), right.getY(), 0);
+					GL11.glTranslatef(-length - 5, -size * 10 / 2 + i * 10, 0);
+					mc.fontRenderer.drawString(str.str, 0, 0, str.color, true);
+					GL11.glPopMatrix();
+				}
 			}
 		}
 	}

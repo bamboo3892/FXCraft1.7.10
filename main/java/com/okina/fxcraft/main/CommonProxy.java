@@ -13,6 +13,8 @@ import com.okina.fxcraft.account.Reward.Rewards;
 import com.okina.fxcraft.account.RewardRegister;
 import com.okina.fxcraft.block.BlockAccountManager;
 import com.okina.fxcraft.block.BlockFXDealer;
+import com.okina.fxcraft.item.ItemCapitalistGuard;
+import com.okina.fxcraft.item.ItemCapitalistGun;
 import com.okina.fxcraft.item.ItemIPhone;
 import com.okina.fxcraft.item.ItemJentlemensCap;
 import com.okina.fxcraft.item.ItemJentlemensPanz;
@@ -63,6 +65,16 @@ public class CommonProxy {
 	protected void registerItem() {
 		iPhone = new ItemIPhone();
 		GameRegistry.registerItem(iPhone, iPhone.getUnlocalizedName());
+		ArmorMaterial panz = EnumHelper.addArmorMaterial("panz", 0, new int[] { 0, 0, 0, 0 }, 0);
+		ArmorMaterial emeral = EnumHelper.addArmorMaterial("emerald", 0, new int[] { 0, 0, 0, 0 }, 0);
+		jentlemens_cap = new ItemJentlemensCap(panz, 1);
+		GameRegistry.registerItem(jentlemens_cap, jentlemens_cap.getUnlocalizedName());
+		jentlemens_panz = new ItemJentlemensPanz(panz, 1);
+		GameRegistry.registerItem(jentlemens_panz, jentlemens_panz.getUnlocalizedName());
+		capitalist_gun = new ItemCapitalistGun();
+		GameRegistry.registerItem(capitalist_gun, capitalist_gun.getUnlocalizedName());
+		capitalist_guard = new ItemCapitalistGuard(emeral, 1);
+		GameRegistry.registerItem(capitalist_guard, capitalist_guard.getUnlocalizedName());
 
 		for (int i = 0; i < 5; i++){
 			limit_dealLot[i] = new ItemToolTip(Lists.newArrayList("Permit to deal " + AccountInfo.DEAL_LIMIT[i + 1] + " lot or less")).setUnlocalizedName("fxcraft_limit_dealLot_" + (i + 1)).setTextureName(MODID + ":limit_g_" + (i + 1)).setCreativeTab(FXCraftCreativeTab);
@@ -88,15 +100,9 @@ public class CommonProxy {
 		for (int i = 0; i < Rewards.TOTAL_LOSS.length; i++){
 			RewardRegister.instance.registerReward(Rewards.TOTAL_LOSS[i]);
 		}
-
-		ArmorMaterial Useless = EnumHelper.addArmorMaterial("useless", 0, new int[] { 0, 0, 0, 0 }, 0);
-		jentlemens_cap = new ItemJentlemensCap(Useless, 1, 0);
-		GameRegistry.registerItem(jentlemens_cap, jentlemens_cap.getUnlocalizedName());
-		jentlemens_panz = new ItemJentlemensPanz(Useless, 1, 2);
-		GameRegistry.registerItem(jentlemens_panz, jentlemens_panz.getUnlocalizedName());
-
 		RewardRegister.instance.registerReward(Rewards.MAX_LOT);
 		RewardRegister.instance.registerReward(Rewards.MAX_LEVERAGE);
+		RewardRegister.instance.registerReward(Rewards.MAX_LOT_LEVERAGE);
 		RewardRegister.instance.registerReward(Rewards.FIRST_DEAL);
 		RewardRegister.instance.registerReward(Rewards.FIRST_LIMITS_DEAL);
 		RewardRegister.instance.registerReward(Rewards.FIRST_LOSSCUT);
@@ -206,7 +212,7 @@ public class CommonProxy {
 		}
 	}
 
-	protected void spawnParticle(World world, int id, Object... objects) {}
+	public void spawnParticle(World world, int id, double x, double y, double z, double vecX, double vecY, double vecZ) {}
 
 	protected List<PopUpMessage> messageList = Collections.<PopUpMessage> synchronizedList(Lists.<PopUpMessage> newLinkedList());
 

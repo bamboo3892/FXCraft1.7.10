@@ -1,5 +1,8 @@
 package com.okina.fxcraft.item;
 
+import java.util.List;
+
+import com.okina.fxcraft.client.IToolTipUser;
 import com.okina.fxcraft.client.model.ModelJentleArmor;
 import com.okina.fxcraft.main.ClientProxy;
 import com.okina.fxcraft.main.FXCraft;
@@ -13,15 +16,26 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
+import net.minecraft.potion.Potion;
+import net.minecraft.world.World;
 
-public class ItemJentlemensPanz extends ItemArmor {
+public class ItemJentlemensPanz extends ItemArmor implements IToolTipUser {
 
-	public ItemJentlemensPanz(ArmorMaterial meterial, int renderId, int type) {
-		super(meterial, renderId, type);
+	public ItemJentlemensPanz(ArmorMaterial material, int renderId) {
+		super(material, renderId, 2);
 		setMaxStackSize(1);
 		setCreativeTab(FXCraft.FXCraftCreativeTab);
-		setTextureName(FXCraft.MODID + ":jentlemens_panz");
+		setTextureName(FXCraft.MODID + ":jentlemens_cap");
 		setUnlocalizedName("fxcraft_jentlemens_panz");
+	}
+
+	@Override
+	public void onArmorTick(World world, EntityPlayer player, ItemStack itemStack) {
+		if(!world.isRemote){
+			if(player.isPotionActive(Potion.wither.id)){
+				player.removePotionEffect(Potion.wither.id);
+			}
+		}
 	}
 
 	@Override
@@ -34,8 +48,8 @@ public class ItemJentlemensPanz extends ItemArmor {
 			armorModel.bipedBody.showModel = false;
 			armorModel.bipedRightArm.showModel = false;
 			armorModel.bipedLeftArm.showModel = false;
-			armorModel.bipedRightLeg.showModel = false;
-			armorModel.bipedLeftLeg.showModel = false;
+			armorModel.bipedRightLeg.showModel = true;
+			armorModel.bipedLeftLeg.showModel = true;
 
 			armorModel.isSneak = entityLiving.isSneaking();
 			armorModel.isRiding = entityLiving.isRiding();
@@ -63,7 +77,22 @@ public class ItemJentlemensPanz extends ItemArmor {
 
 	@Override
 	public String getArmorTexture(ItemStack stack, Entity entity, int slot, String layer) {
-		return String.format(FXCraft.MODID + ":textures/models/armor/jentlemens_armor.png");
+		return FXCraft.MODID + ":textures/models/armor/jentlemens_armor.png";
+	}
+
+	@Override
+	public void addToolTip(List<String> toolTip, ItemStack itemStack, EntityPlayer player, boolean shiftPressed, boolean advancedToolTip) {
+		toolTip.add("Cure Wither");
+	}
+
+	@Override
+	public int getNeutralLines() {
+		return 0;
+	}
+
+	@Override
+	public int getShiftLines() {
+		return 0;
 	}
 
 }

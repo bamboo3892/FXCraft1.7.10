@@ -4,6 +4,10 @@ tile.fxcraft_account_manager.name=Account Maneger
 tile.fxcraft_fx_dealer.name=FX Dealer
 
 item.fxcraft_iphone.name=iPhone
+item.fxcraft_jentlemens_cap.name=Jentlemens Cap
+item.fxcraft_jentlemens_panz.name=Jentlemens Panz
+item.fxcraft_capitalist_gun.name=Capitalist Gun
+item.fxcraft_capitalist_guard.name=Capitalist Guard
 item.fxcraft_limit_dealLot_1.name=License (Lot Lv.1)
 item.fxcraft_limit_dealLot_2.name=License (Lot Lv.2)
 item.fxcraft_limit_dealLot_3.name=License (Lot Lv.3)

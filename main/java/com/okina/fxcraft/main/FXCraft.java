@@ -25,7 +25,7 @@ public class FXCraft {
 
 	public static final String MODID = "FXCraft";
 	public static final String NAME = "FXCraft";
-	public static final String VERSION = "1.0";
+	public static final String VERSION = "1.1";
 
 	@Mod.Instance(MODID)
 	public static FXCraft instance;
@@ -50,6 +50,8 @@ public class FXCraft {
 	public static Item limit_limits_trade;
 	public static Item jentlemens_cap;
 	public static Item jentlemens_panz;
+	public static Item capitalist_gun;
+	public static Item capitalist_guard;
 
 	//creative tab
 	public static final CreativeTabs FXCraftCreativeTab = new CreativeTabs("fxcraftCreativeTab") {
@@ -67,6 +69,9 @@ public class FXCraft {
 	public static final int BLOCK_GUI_ID_3 = 4;
 	public static final int BLOCK_GUI_ID_4 = 5;
 	public static final int BLOCK_GUI_ID_5 = 6;
+
+	//Particle ID
+	public static final int PARTICLE_GUN = 0;
 
 	//render ID
 	public static int ACCOUNT_MANAGER_RENDER_ID = RenderingRegistry.getNextAvailableRenderId();
