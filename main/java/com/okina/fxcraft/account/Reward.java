@@ -49,6 +49,7 @@ public abstract class Reward {
 		return null;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		return o instanceof Reward && ((Reward) o).getName().equals(name);
 	}
@@ -177,7 +178,7 @@ public abstract class Reward {
 			}
 		};
 
-		public static final Reward FIRST_LEVERAGE_DEAL = new Reward("first_leverage_deal", "High Risk High Return", new ItemStack(Items.emerald, 5), "First Leverage Trade") {
+		public static final Reward FIRST_LEVERAGE_DEAL = new Reward("first_leverage_deal", "High Risk High Return", new ItemStack(FXCraft.iPhone), "First Leverage Trade") {
 			@Override
 			public boolean canGetReward(AccountInfo account) {
 				for (FXDealHistory history : account.history){
@@ -197,7 +198,7 @@ public abstract class Reward {
 			}
 		};
 
-		public static final Reward FIRST_LOSSCUT = new Reward("first_losscut", "Oh shit!", new ItemStack(FXCraft.iPhone, 1), "First Loss-Cut") {
+		public static final Reward FIRST_LOSSCUT = new Reward("first_losscut", "Oh shit!", new ItemStack(FXCraft.fx_mask, 1), "First Loss-Cut") {
 			@Override
 			public boolean canGetReward(AccountInfo account) {
 				for (FXDealHistory history : account.history){

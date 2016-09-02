@@ -3,6 +3,7 @@ package com.okina.fxcraft.client.gui.account_manager;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.okina.fxcraft.account.AccountHandler;
 import com.okina.fxcraft.account.AccountInfo;
 import com.okina.fxcraft.client.gui.GuiFlatButton;
 import com.okina.fxcraft.client.gui.GuiIconLabel;
@@ -43,9 +44,9 @@ public class MakeAccountTab extends GuiTab<AccountManagerGui> {
 	@Override
 	public void drawComponent(Minecraft minecraft, int mouseX, int mouseY) {
 
-		if("".equals(nameField.getText())){
+		if(!AccountHandler.instance.checkIsValidAccountName(nameField.getText())){
 			checkLabel.visible = true;
-			checkLabel.setTips(Lists.newArrayList("Blank Name"));
+			checkLabel.setTips(Lists.newArrayList("Invalid Name"));
 		}else{
 			String checked = gui.tile.checkedAccountName;
 			if(checked != null && checked.equals(nameField.getText()) && !gui.tile.accountCheck){

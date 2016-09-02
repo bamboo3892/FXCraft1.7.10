@@ -55,10 +55,12 @@ public class FXDealerTileEntity extends TileEntity implements IGuiTile, ISimpleT
 		FXCraft.proxy.sendPacketToServer(new SimpleTilePacket(this, PacketType.ACCOUNT_LOGIN, tag));
 	}
 
+	@Override
 	public boolean hasAccountUpdate(long lastAccountUpdate) {
 		return this.lastAccountUpdate > lastAccountUpdate;
 	}
 
+	@Override
 	public AccountInfo getAccountInfo() {
 		return loginAccount;
 	}

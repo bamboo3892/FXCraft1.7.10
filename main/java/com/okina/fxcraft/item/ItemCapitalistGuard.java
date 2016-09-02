@@ -13,6 +13,8 @@ import com.okina.fxcraft.main.FXCraft;
 import com.okina.fxcraft.utils.ColoredString;
 import com.okina.fxcraft.utils.RenderingHelper;
 
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -36,6 +38,7 @@ public class ItemCapitalistGuard extends ItemArmor implements IHUDItem, IHUDArmo
 		setUnlocalizedName("fxcraft_capitalist_guard");
 	}
 
+	@Override
 	public void onUpdate(ItemStack itemStack, World world, Entity entity, int slot, boolean equipped) {
 		if(equipped && !world.isRemote && entity instanceof EntityPlayerMP){
 			NBTTagCompound tag = itemStack.getTagCompound();
@@ -93,6 +96,7 @@ public class ItemCapitalistGuard extends ItemArmor implements IHUDItem, IHUDArmo
 		}
 	}
 
+	@SideOnly(Side.CLIENT)
 	@Override
 	public void renderHUD(Minecraft mc, double renderTicks, ItemStack itemStack) {
 		EntityPlayer player = mc.thePlayer;
@@ -109,6 +113,7 @@ public class ItemCapitalistGuard extends ItemArmor implements IHUDItem, IHUDArmo
 		}
 	}
 
+	@SideOnly(Side.CLIENT)
 	@Override
 	public boolean comparePastRenderObj(ItemStack object) {
 		return this == object.getItem();

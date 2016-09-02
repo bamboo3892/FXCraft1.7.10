@@ -64,6 +64,8 @@ public class AccountHandler {
 			}
 		}
 		if(accountList == null) accountList = Lists.newArrayList();
+		while (accountList.remove(null))
+			;
 
 		System.out.println("FXCraft Accounts////////////////////////////////////////////////////////////////////");
 		for (Account account : accountList){
@@ -110,7 +112,7 @@ public class AccountHandler {
 
 	/**This method can use on client*/
 	public boolean checkIsValidAccountName(String name) {
-		if(name == null || name.equals("") || name.matches("¥W")) return false;
+		if(name == null || name.equals("") || name.matches(".*\\W+.*")) return false;
 		if(FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER){
 			for (Account account : accountList){
 				if(account.name.equals(name)) return false;
@@ -123,7 +125,7 @@ public class AccountHandler {
 		if(FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT){
 			return null;
 		}
-		if(!checkIsValidAccountName(name) || password == null || password.matches("¥W")) return null;
+		if(!checkIsValidAccountName(name) || password == null || password.matches(".*\\W+.*")) return null;
 		Account account = new Account(name, password);
 		accountList.add(account);
 		updatePropertyFile();

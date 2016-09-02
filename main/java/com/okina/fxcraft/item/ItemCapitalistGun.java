@@ -14,6 +14,8 @@ import com.okina.fxcraft.utils.ColoredString;
 import com.okina.fxcraft.utils.RenderingHelper;
 import com.okina.fxcraft.utils.UtilMethods;
 
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -39,6 +41,7 @@ public class ItemCapitalistGun extends Item implements IToolTipUser, IHUDItem {
 		setMaxStackSize(1);
 	}
 
+	@Override
 	public void onUpdate(ItemStack itemStack, World world, Entity entity, int slot, boolean equipped) {
 		if(equipped && !world.isRemote && entity instanceof EntityPlayerMP){
 			NBTTagCompound tag = itemStack.getTagCompound();
@@ -130,6 +133,7 @@ public class ItemCapitalistGun extends Item implements IToolTipUser, IHUDItem {
 		return 0;
 	}
 
+	@SideOnly(Side.CLIENT)
 	@Override
 	public void renderHUD(Minecraft mc, double renderTicks, ItemStack itemStack) {
 		EntityPlayer player = mc.thePlayer;
@@ -145,6 +149,7 @@ public class ItemCapitalistGun extends Item implements IToolTipUser, IHUDItem {
 		}
 	}
 
+	@SideOnly(Side.CLIENT)
 	@Override
 	public boolean comparePastRenderObj(ItemStack object) {
 		return this == object.getItem();

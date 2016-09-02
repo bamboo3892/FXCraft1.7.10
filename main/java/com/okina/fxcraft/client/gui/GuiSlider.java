@@ -77,7 +77,7 @@ public class GuiSlider extends GuiButton {
 				color = 0xFFFFFF;
 			}
 			color = 0xFFFFFF;
-			String str = String.valueOf((int) (value + dragValue));
+			String str = String.valueOf(value + dragValue);
 			fontrenderer.drawString(str, xPosition + width / 2 - fontrenderer.getStringWidth(str) / 2, yPosition + (height - 8) / 2, color, false);
 
 			GL11.glPopAttrib();

@@ -27,7 +27,7 @@ public class Account extends AccountInfo {
 		if(lot > DEAL_LIMIT[dealLotLimit]){
 			return new Result(false, "Not Permitted Lot");
 		}
-		double leverage = lot / (double) deposit;
+		double leverage = lot / deposit;
 		if(leverage > LEVERAGE_LIMIT[leverageLimit]){
 			return new Result(false, "Not Permitted Leverage");
 		}
@@ -56,7 +56,7 @@ public class Account extends AccountInfo {
 		if(dealLot > DEAL_LIMIT[dealLotLimit]){
 			return new Result(false, "Not Permitted Lot");
 		}
-		double leverage = dealLot / (double) deposit;
+		double leverage = dealLot / deposit;
 		if(leverage > LEVERAGE_LIMIT[leverageLimit]){
 			return new Result(false, "Not Permitted Leverage");
 		}
@@ -188,7 +188,7 @@ public class Account extends AccountInfo {
 		boolean delete = false;
 		flag1: for (int i = 0; i < getPositionOrder.size(); i++){
 			GetPositionOrder order = getPositionOrder.get(i);
-			double leverage = order.lot / (double) order.depositLot;
+			double leverage = order.lot / order.depositLot;
 			if(order.depositLot <= 0 || order.lot < order.depositLot || order.lot > DEAL_LIMIT[dealLotLimit] || leverage > LEVERAGE_LIMIT[leverageLimit]){
 				getPositionOrder.remove(order);
 				balance += order.depositLot;
@@ -264,7 +264,7 @@ public class Account extends AccountInfo {
 		boolean delete = false;
 		flag1: for (int i = 0; i < getPositionOrder.size(); i++){
 			GetPositionOrder order = getPositionOrder.get(i);
-			double leverage = order.lot / (double) order.depositLot;
+			double leverage = order.lot / order.depositLot;
 			if(order.depositLot <= 0 || order.lot < order.depositLot || order.lot > DEAL_LIMIT[dealLotLimit] || leverage > LEVERAGE_LIMIT[leverageLimit]){
 				getPositionOrder.remove(order);
 				balance += order.depositLot;

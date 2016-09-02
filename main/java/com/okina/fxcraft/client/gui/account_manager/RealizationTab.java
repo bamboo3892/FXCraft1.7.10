@@ -44,7 +44,11 @@ public class RealizationTab extends GuiTab<AccountManagerGui> {
 	public void drawComponent(Minecraft minecraft, int mouseX, int mouseY) {
 		AccountInfo account = gui.tile.getAccountInfo();
 		if(gui.tile.hasAccountUpdate(lastAccountUpdate)){
-			slider.setMaxValue((int) (account.balance / 1000));
+			if(account != null){
+				slider.setMaxValue((int) (account.balance / 1000));
+			}else{
+				slider.setMaxValue(1);
+			}
 		}
 		int i = (gui.width - gui.getSizeX()) / 2;
 		int j = (gui.height - gui.getSizeY()) / 2;

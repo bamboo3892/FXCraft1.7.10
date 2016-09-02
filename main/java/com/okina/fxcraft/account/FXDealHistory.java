@@ -51,6 +51,7 @@ public class FXDealHistory {
 		gain = tag.getDouble("gain");
 	}
 
+	@Override
 	public FXDealHistory clone() {
 		FXDealHistory history = new FXDealHistory();
 		history.date = date;

@@ -15,6 +15,7 @@ import com.okina.fxcraft.block.BlockAccountManager;
 import com.okina.fxcraft.block.BlockFXDealer;
 import com.okina.fxcraft.item.ItemCapitalistGuard;
 import com.okina.fxcraft.item.ItemCapitalistGun;
+import com.okina.fxcraft.item.ItemFXMask;
 import com.okina.fxcraft.item.ItemIPhone;
 import com.okina.fxcraft.item.ItemJentlemensCap;
 import com.okina.fxcraft.item.ItemJentlemensPanz;
@@ -75,6 +76,8 @@ public class CommonProxy {
 		GameRegistry.registerItem(capitalist_gun, capitalist_gun.getUnlocalizedName());
 		capitalist_guard = new ItemCapitalistGuard(emeral, 1);
 		GameRegistry.registerItem(capitalist_guard, capitalist_guard.getUnlocalizedName());
+		fx_mask = new ItemFXMask(panz, 1);
+		GameRegistry.registerItem(fx_mask, fx_mask.getUnlocalizedName());
 
 		for (int i = 0; i < 5; i++){
 			limit_dealLot[i] = new ItemToolTip(Lists.newArrayList("Permit to deal " + AccountInfo.DEAL_LIMIT[i + 1] + " lot or less")).setUnlocalizedName("fxcraft_limit_dealLot_" + (i + 1)).setTextureName(MODID + ":limit_g_" + (i + 1)).setCreativeTab(FXCraftCreativeTab);

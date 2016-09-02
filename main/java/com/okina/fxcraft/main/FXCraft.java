@@ -52,6 +52,7 @@ public class FXCraft {
 	public static Item jentlemens_panz;
 	public static Item capitalist_gun;
 	public static Item capitalist_guard;
+	public static Item fx_mask;
 
 	//creative tab
 	public static final CreativeTabs FXCraftCreativeTab = new CreativeTabs("fxcraftCreativeTab") {

@@ -5,6 +5,7 @@ import static com.okina.fxcraft.main.FXCraft.*;
 import java.io.File;
 import java.util.Comparator;
 
+import com.okina.fxcraft.client.model.ModelFXMask;
 import com.okina.fxcraft.client.model.ModelJentleArmor;
 import com.okina.fxcraft.client.particle.ParticleGun;
 import com.okina.fxcraft.client.renderer.BlockAccountManagerRenderer;
@@ -18,6 +19,7 @@ public class ClientProxy extends CommonProxy {
 
 	public static ModelJentleArmor modelJentlemensCap;
 	public static ModelJentleArmor modelJentlemensPanz;
+	public static ModelFXMask modelFXMask;
 
 	@Override
 	protected void loadConfiguration(File pfile) {
@@ -29,6 +31,7 @@ public class ClientProxy extends CommonProxy {
 		RenderingRegistry.registerBlockHandler(new BlockAccountManagerRenderer());
 		modelJentlemensCap = new ModelJentleArmor(false);
 		modelJentlemensPanz = new ModelJentleArmor(true);
+		modelFXMask = new ModelFXMask();
 
 		//		String libname;
 		//		String[] library_names;

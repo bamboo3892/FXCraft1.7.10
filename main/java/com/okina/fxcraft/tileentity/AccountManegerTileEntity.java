@@ -70,10 +70,12 @@ public class AccountManegerTileEntity extends TileEntity implements IGuiTile, IS
 		FXCraft.proxy.sendPacketToServer(new SimpleTilePacket(this, PacketType.ACCOUNT_LOGIN, tag));
 	}
 
+	@Override
 	public boolean hasAccountUpdate(long lastAccountUpdate) {
 		return this.lastAccountUpdate > lastAccountUpdate;
 	}
 
+	@Override
 	public AccountInfo getAccountInfo() {
 		return loginAccount;
 	}

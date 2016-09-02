@@ -100,6 +100,7 @@ public class GuiTable<T extends GuiTableRow> extends GuiButton implements ITipCo
 		this.focused = focused;
 	}
 
+	@Override
 	public List<String> getTipList(int mouseX, int mouseY, boolean shift, boolean ctrl) {
 		int row = (int) ((mouseY - yPosition - 1) / (float) titleRow.sizeY);
 		int column = 0;

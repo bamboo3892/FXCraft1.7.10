@@ -89,7 +89,7 @@ public class FXPosition implements Cloneable {
 
 	public FXPosition split(double dealLot) {
 		if(lot < dealLot) throw new IllegalArgumentException();
-		double ratio = (double) dealLot / lot;
+		double ratio = dealLot / lot;
 
 		FXPosition clone = clone();
 		clone.positionID = UUID.randomUUID().toString();

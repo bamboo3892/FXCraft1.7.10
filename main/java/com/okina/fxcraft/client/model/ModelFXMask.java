@@ -4,29 +4,35 @@ import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.entity.Entity;
 
-public class ModelJentleArmor extends ModelBiped {
+public class ModelFXMask extends ModelBiped {
 
-	private boolean isLeg = false;
-	private ModelRenderer legShape;
+	private ModelRenderer mask;
 
-	public ModelJentleArmor(boolean isLeg) {
-		textureWidth = 64;
-		textureHeight = 32;
+	public ModelFXMask() {
+		bipedHead.showModel = true;
+		bipedHeadwear.showModel = false;
+		bipedBody.showModel = false;
+		bipedRightArm.showModel = false;
+		bipedLeftArm.showModel = false;
+		bipedRightLeg.showModel = false;
+		bipedLeftLeg.showModel = false;
 
-		legShape = new ModelRenderer(this, 0, 16);
-		legShape.addBox(0F, 0F, 0F, 8, 3, 4);
-		legShape.setRotationPoint(-4F, 10F, -2F);
-		legShape.setTextureSize(64, 32);
-		legShape.mirror = true;
-		setRotation(legShape, 0F, 0F, 0F);
-		this.isLeg = isLeg;
+		textureWidth = 32;
+		textureHeight = 16;
+
+		mask = new ModelRenderer(this, 0, 0);
+		mask.addBox(0F, 0F, 0F, 8, 8, 8);
+		mask.setRotationPoint(-4F, -8F, -4.01F);
+		mask.setTextureSize(32, 16);
+		mask.mirror = true;
+		setRotation(mask, 0F, 0F, 0F);
+		bipedHead.addChild(mask);
 	}
 
 	@Override
 	public void render(Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
 		super.render(entity, f, f1, f2, f3, f4, f5);
 		setRotationAngles(f, f1, f2, f3, f4, f5, entity);
-		if(isLeg) legShape.render(f5);
 	}
 
 	private void setRotation(ModelRenderer model, float x, float y, float z) {
